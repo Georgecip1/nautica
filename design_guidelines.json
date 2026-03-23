@@ -1,0 +1,113 @@
+{
+  "brand_identity": {
+    "name": "Swim Club Nautica",
+    "theme": "dark",
+    "tone": "Premium, Athletic, Precision, Modern",
+    "description": "A high-performance swimming club platform that feels like a luxury sports car dashboard. Dark, sleek, with neon accents.",
+    "colors": {
+      "background": "#050505",
+      "surface": "#121212",
+      "surface_highlight": "#1E1E1E",
+      "primary": "#CCFF00",
+      "primary_foreground": "#000000",
+      "secondary": "#00C2FF",
+      "secondary_foreground": "#000000",
+      "text_main": "#FFFFFF",
+      "text_muted": "#A1A1AA",
+      "border": "#27272A",
+      "error": "#FF3B30",
+      "success": "#34C759"
+    },
+    "typography": {
+      "font_family_heading": "\"Barlow Condensed\", sans-serif",
+      "font_family_body": "\"Manrope\", sans-serif",
+      "import_url": "https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;700;900&family=Manrope:wght@300;400;500;700&display=swap",
+      "rules": {
+        "headings": "uppercase tracking-tight font-bold",
+        "subheadings": "uppercase tracking-widest text-xs font-medium text-primary"
+      }
+    }
+  },
+  "layout_system": {
+    "spacing_scale": {
+      "section_gap": "py-24 md:py-32",
+      "element_gap": "gap-6 md:gap-12",
+      "container_padding": "px-6 md:px-12"
+    },
+    "grid_styles": {
+      "public_bento": "grid grid-cols-1 md:grid-cols-12 gap-6",
+      "admin_dense": "grid grid-cols-1 md:grid-cols-4 gap-4"
+    },
+    "border_radius": {
+      "default": "rounded-sm",
+      "button": "rounded-none",
+      "card": "rounded-md"
+    }
+  },
+  "visual_enhancers": {
+    "glassmorphism": "bg-black/40 backdrop-blur-xl border border-white/10",
+    "neon_glow": "shadow-[0_0_20px_rgba(204,255,0,0.3)]",
+    "texture": "bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20",
+    "gradients": {
+      "hero_overlay": "bg-gradient-to-t from-background via-background/50 to-transparent",
+      "accent_text": "bg-clip-text text-transparent bg-gradient-to-r from-primary to-secondary"
+    }
+  },
+  "components": {
+    "buttons": {
+      "primary": "bg-primary text-black font-bold uppercase tracking-wider hover:bg-primary/90 hover:scale-105 transition-transform",
+      "secondary": "border border-white/20 text-white hover:bg-white/10 uppercase tracking-wider",
+      "ghost": "text-white hover:text-primary transition-colors"
+    },
+    "cards": {
+      "feature": "group relative overflow-hidden bg-surface border border-white/5 hover:border-primary/50 transition-colors p-8",
+      "pricing": "bg-surface_highlight border border-white/10 p-10 hover:-translate-y-2 transition-transform duration-300"
+    },
+    "inputs": {
+      "default": "bg-transparent border-b border-white/20 focus:border-primary focus:ring-0 px-0 py-3 rounded-none placeholder:text-white/30"
+    }
+  },
+  "assets": {
+    "images": {
+      "hero_background": "https://images.unsplash.com/photo-1532205924750-7e84f03402b2?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwxfHxzd2ltbWVyJTIwdW5kZXJ3YXRlciUyMHN0cmVhbWxpbmVkfGVufDB8fHx8MTc3Mzc1Nzg2MXww&ixlib=rb-4.1.0&q=85",
+      "pool_facility": "https://images.unsplash.com/photo-1529868069638-fc74a3229309?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA3MDB8MHwxfHNlYXJjaHwzfHxtb2Rlcm4lMjBpbmRvb3IlMjBzd2ltbWluZyUyMHBvb2wlMjBhcmNoaXRlY3R1cmUlMjBkYXJrfGVufDB8fHx8MTc3Mzc1Nzg2MXww&ixlib=rb-4.1.0&q=85",
+      "kids_swim": "https://images.unsplash.com/photo-1619334910286-c613d0d1a4d1?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NTY2NzR8MHwxfHNlYXJjaHw0fHxraWRzJTIwc3dpbW1pbmclMjBsZXNzb24lMjBoYXBweXxlbnwwfHx8fDE3NzM3NTc4NjN8MA&ixlib=rb-4.1.0&q=85",
+      "coach_placeholder": "https://images.unsplash.com/photo-1606874711241-2e1d6496ac42?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjAzOTB8MHwxfHNlYXJjaHwyfHxzd2ltbWluZyUyMHRyYWluZXIlMjBzdG9wd2F0Y2h8ZW58MHx8fHwxNzczNzU3ODczfDA&ixlib=rb-4.1.0&q=85",
+      "water_texture": "https://images.unsplash.com/photo-1706612203418-e1f0f945e0f7?crop=entropy&cs=srgb&fm=jpg&ixid=M3w4NjA2OTV8MHwxfHNlYXJjaHwzfHxzd2ltbWVyJTIwdW5kZXJ3YXRlciUyMHN0cmVhbWxpbmVkfGVufDB8fHx8MTc3Mzc1Nzg2MXww&ixlib=rb-4.1.0&q=85"
+    },
+    "logo_reference": "https://customer-assets.emergentagent.com/job_ccb1a182-4c98-43e1-b457-d8fbdb54f772/artifacts/ew7jp05u_IMG_9819.png"
+  },
+  "page_specific_instructions": {
+    "landing_page": {
+      "hero": "Full-screen video/image background (hero_background). Large centered typography 'SWIM CLUB NAUTICA' in Barlow Condensed. Subtext in Manrope. CTA 'JOIN THE CLUB' in Neon Lime.",
+      "benefits": "Bento grid layout. Dark cards with neon icons. High contrast.",
+      "coaches": "Carousel or grid. Black & White photos with neon hover effects.",
+      "locations": "Mapbox integration. Dark mode map style."
+    },
+    "admin_dashboard": {
+      "layout": "Sidebar navigation (left). Top bar with quick actions. Main content area with high-density data grids.",
+      "widgets": "KPI cards with sparklines. 'Terminator' style thin borders.",
+      "tables": "Zebra striping (very subtle: bg-white/5). Sticky headers."
+    },
+    "user_portal": {
+      "layout": "Card-based layout. Personal stats prominently displayed.",
+      "qr_code": "Central feature. Easy access for check-in."
+    }
+  },
+  "universal_guidelines": {
+    "design_philosophy": "Fusion over Imitation. Emotion First. Content is King. Zoom In. Negative Space. Contrast.",
+    "anti_patterns": [
+      "Purple/Teal for CTA",
+      "Inter everywhere",
+      "Center-Everything",
+      "Gradient Overload"
+    ],
+    "accessibility": "Ensure text contrast >= 4.5:1. Use ARIA labels. Support keyboard navigation.",
+    "motion": "Use framer-motion for smooth transitions. Staggered entrance animations for lists. Micro-interactions on hover."
+  },
+  "tech_stack_instructions": {
+    "tailwind": "Extend theme with custom colors (primary: #CCFF00, background: #050505). Add 'Barlow Condensed' and 'Manrope' to font family.",
+    "shadcn": "Customize base components. Remove default border-radius if too round. darken backgrounds.",
+    "icons": "Use Lucide React (default) or Phosphor Icons for a more technical look."
+  }
+}
