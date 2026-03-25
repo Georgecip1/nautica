@@ -1,281 +1,288 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import PublicLayout from '../../components/PublicLayout';
-import { plansAPI, locationsAPI } from '../../lib/api';
-import { MapPin, Check, Info } from 'lucide-react';
+import { MapPin, Info, ArrowRight, Users } from 'lucide-react';
 
-const categories = [
-  { id: 'all', label: 'Toate' },
-  { id: 'KIDS', label: 'Copii' },
-  { id: 'ADULTS', label: 'Adulți' },
-  { id: 'PERFORMANCE', label: 'Performanță' },
+// Notele globale care se aplică la toate locațiile
+const GLOBAL_NOTES = [
+  "Abonamentele sunt nominale și netransmisibile.",
+  "Valabilitatea abonamentului începe de la data cumpărării acestuia."
+];
+
+// Datele hardcodate 
+const PACKS = [
+  {
+    id: "fiald",
+    title: "Bazin Fiald (Hotel Fiald)",
+    meta: "Strada Tazlăului 7A, Bacău",
+    sections: [
+      {
+        title: "Copii",
+        offers: [
+          { id: "f1", activity: "Ședință copii inițiere / perfecționare", sessions: "1", duration: "50 min", validity: "30 zile", priceLei: 80 },
+          { id: "f2", activity: "Abonament copii", badge: "Popular", sessions: "8", duration: "50 min", validity: "30 zile", priceLei: 440 },
+          { id: "f3", activity: "Abonament copii", sessions: "12", duration: "50 min", validity: "30 zile", priceLei: 550 },
+          { id: "f4", activity: "Program grădiniță", sessions: "4", duration: "50 min", validity: "30 zile", priceLei: 230 },
+        ]
+      },
+      {
+        title: "Adulți",
+        offers: [
+          { id: "f5", activity: "Abonament adulți", sessions: "4", duration: "50 min", validity: "30 zile", priceLei: 290 },
+          { id: "f6", activity: "Abonament adulți", badge: "Popular", sessions: "8", duration: "50 min", validity: "30 zile", priceLei: 490 },
+        ]
+      },
+      {
+        title: "Special & Performanță",
+        offers: [
+          { id: "f7", activity: "Personal Training", badge: "PT", sessions: "1", duration: "50 min", validity: "30 zile", priceLei: 180 },
+          { id: "f8", activity: "Personal Training", badge: "PT", sessions: "4", duration: "50 min", validity: "30 zile", priceLei: 620 },
+          { id: "f9", activity: "Abonament Performanță", badge: "Nelimitat", sessions: "Nelimitat", duration: "Specificație Antrenor", validity: "30 zile", priceLei: 450 },
+          { id: "f10", activity: "BabySwim (2-4 ani)", badge: "BabySwim", sessions: "1", duration: "50 min", validity: "30 zile", priceLei: 180 },
+          { id: "f11", activity: "BabySwim (2-4 ani)", badge: "BabySwim", sessions: "4", duration: "50 min", validity: "30 zile", priceLei: 620 },
+        ]
+      }
+    ],
+    footerNotes: [
+      ...GLOBAL_NOTES,
+      "Accesul se face prin recepția hotelului Fiald."
+    ]
+  },
+  {
+    id: "olimpic",
+    title: "Bazinul Olimpic Bacău",
+    meta: "Aleea Ghioceilor 10-14, Bacău",
+    sections: [
+      {
+        title: "Copii & Adulți",
+        offers: [
+          { id: "o1", activity: "Ședință copii", sessions: "1", duration: "50 min", validity: "45 zile", priceLei: 80 },
+          { id: "o2", activity: "Abonament copii", sessions: "10", duration: "50 min", validity: "45 zile", priceLei: 550 },
+          { id: "o3", activity: "Abonament adulți", sessions: "10", duration: "50 min", validity: "45 zile", priceLei: 550 },
+        ]
+      }
+    ],
+    footerNotes: [
+      ...GLOBAL_NOTES,
+      "Programul poate varia în funcție de disponibilitatea bazinului (competiții sportive)."
+    ]
+  },
+  {
+    id: "emd",
+    title: "Bazinul EMD Academy",
+    meta: "Bulevardul Unirii 43, Bacău",
+    sections: [
+      {
+        title: "Copii",
+        offers: [
+          { id: "e1", activity: "Ședință copii", sessions: "1", duration: "50 min", validity: "45 zile", priceLei: 80 },
+          { id: "e2", activity: "Abonament copii", badge: "Popular", sessions: "8+1", duration: "50 min", validity: "45 zile", priceLei: 500 },
+        ]
+      }
+    ],
+    footerNotes: [
+      ...GLOBAL_NOTES,
+      "Contact locație pentru detalii administrative: office@complexemd.ro"
+    ]
+  }
 ];
 
 const SubscriptionsPage = () => {
-  const [plans, setPlans] = useState([]);
-  const [locations, setLocations] = useState([]);
-  const [selectedLocation, setSelectedLocation] = useState('all');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [loading, setLoading] = useState(true);
+  const [activeId, setActiveId] = useState(PACKS[0].id);
 
-  useEffect(() => {
-    fetchData();
-  }, []);
-
-  const fetchData = async () => {
-    try {
-      const [plansRes, locationsRes] = await Promise.all([
-        plansAPI.getAll(),
-        locationsAPI.getAll()
-      ]);
-      setPlans(plansRes.data);
-      setLocations(locationsRes.data);
-    } catch (error) {
-      console.error('Failed to fetch data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredPlans = plans.filter(plan => {
-    if (selectedLocation !== 'all' && plan.location !== selectedLocation) return false;
-    if (selectedCategory !== 'all' && plan.category !== selectedCategory) return false;
-    return true;
-  });
-
-  const groupedByLocation = filteredPlans.reduce((acc, plan) => {
-    if (!acc[plan.location]) acc[plan.location] = [];
-    acc[plan.location].push(plan);
-    return acc;
-  }, {});
+  const activePack = useMemo(
+    () => PACKS.find((p) => p.id === activeId),
+    [activeId]
+  );
 
   return (
     <PublicLayout>
-      {/* Hero */}
-      <section className="pt-32 pb-16 bg-[#050505]" data-testid="subscriptions-hero">
+      {/* Hero Section */}
+      <section className="pt-32 pb-16 bg-[#050505] border-b border-white/5">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="max-w-3xl">
-            <span className="text-[#CCFF00] text-xs font-heading uppercase tracking-[0.3em] mb-4 block">
-              Abonamente
-            </span>
-            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-white uppercase leading-tight mb-6">
-              Planuri Pentru<br />Fiecare Nivel
-            </h1>
-            <p className="text-white/60 text-lg">
-              Alegeți abonamentul potrivit pentru dumneavoastră sau copilul dumneavoastră. 
-              Oferim programe flexibile în 3 locații din Bacău.
-            </p>
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+            <div className="max-w-2xl">
+              <span className="text-[#CCFF00] text-xs font-heading uppercase tracking-[0.3em] mb-4 block">
+                Tarife & Opțiuni
+              </span>
+              <h1 className="font-heading text-4xl md:text-5xl font-black text-white uppercase mb-6 leading-tight">
+                Abonamente
+              </h1>
+              <p className="text-white/60 text-lg leading-relaxed">
+                Alege locația și tipul de activitate potrivit pentru tine sau copilul tău. 
+                Pentru programare, stabilirea grupei și detalii suplimentare, te rugăm să ne contactezi.
+              </p>
+            </div>
+            <Link
+              to="/contact"
+              className="bg-white/10 text-white px-8 py-4 font-heading font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-white/20 transition-colors backdrop-blur-sm shrink-0"
+            >
+              Contactează-ne
+              <ArrowRight size={18} />
+            </Link>
           </div>
         </div>
       </section>
 
-      {/* Filters */}
-      <section className="py-8 bg-[#0A0A0A] border-y border-white/5 sticky top-20 z-30" data-testid="filters-section">
+      {/* Main Content */}
+      <section className="py-16 bg-[#0A0A0A] min-h-screen">
         <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Location Filter */}
-            <div className="flex-1">
-              <label className="text-white/40 text-xs uppercase tracking-wider mb-2 block">Locație</label>
-              <div className="flex flex-wrap gap-2">
+
+          {/* Banner Reducere Frați */}
+          <div className="mb-12 bg-[#CCFF00]/10 border border-[#CCFF00]/20 p-6 flex flex-col md:flex-row items-start md:items-center gap-5">
+            <div className="bg-[#CCFF00] p-3 shrink-0">
+              <Users className="text-black" size={24} />
+            </div>
+            <div>
+              <h3 className="font-heading text-[#CCFF00] font-bold uppercase tracking-wider mb-2 text-lg">
+                Reducere pentru Familii
+              </h3>
+              <p className="text-white/70 text-sm leading-relaxed">
+                Încurajăm sportul în familie! Oferim <strong className="text-white font-bold">10% reducere</strong> din prețul abonamentului pentru al doilea copil înscris (frate/soră). Se aplică pentru orice pachet de ședințe.
+              </p>
+            </div>
+          </div>
+          
+          {/* Tabs Selector Locații */}
+          <div className="flex flex-wrap gap-3 mb-12">
+            {PACKS.map((p) => {
+              const active = p.id === activeId;
+              return (
                 <button
-                  onClick={() => setSelectedLocation('all')}
-                  className={`px-4 py-2 text-sm font-heading uppercase tracking-wider transition-all ${
-                    selectedLocation === 'all'
-                      ? 'bg-[#CCFF00] text-black'
-                      : 'bg-white/5 text-white/60 hover:bg-white/10'
+                  key={p.id}
+                  type="button"
+                  onClick={() => setActiveId(p.id)}
+                  className={`px-6 py-4 font-heading uppercase tracking-wider text-sm font-bold transition-all border ${
+                    active 
+                      ? "bg-[#CCFF00] text-black border-[#CCFF00]" 
+                      : "bg-[#121212] border-white/5 text-white/50 hover:text-white hover:border-white/20"
                   }`}
                 >
-                  Toate
+                  {p.title}
                 </button>
-                {locations.map((loc) => (
-                  <button
-                    key={loc.id}
-                    onClick={() => setSelectedLocation(loc.name)}
-                    className={`px-4 py-2 text-sm font-heading uppercase tracking-wider transition-all ${
-                      selectedLocation === loc.name
-                        ? 'bg-[#CCFF00] text-black'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10'
-                    }`}
-                  >
-                    {loc.name.replace('Bazin ', '').replace('Bazinul ', '')}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Category Filter */}
-            <div>
-              <label className="text-white/40 text-xs uppercase tracking-wider mb-2 block">Categorie</label>
-              <div className="flex flex-wrap gap-2">
-                {categories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    data-testid={`filter-${cat.id}`}
-                    className={`px-4 py-2 text-sm font-heading uppercase tracking-wider transition-all ${
-                      selectedCategory === cat.id
-                        ? 'bg-[#CCFF00] text-black'
-                        : 'bg-white/5 text-white/60 hover:bg-white/10'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
+              );
+            })}
           </div>
-        </div>
-      </section>
 
-      {/* Plans */}
-      <section className="py-16 bg-[#050505]" data-testid="plans-section">
-        <div className="max-w-7xl mx-auto px-6">
-          {loading ? (
-            <div className="text-center py-20">
-              <div className="animate-pulse text-[#CCFF00] font-heading">SE ÎNCARCĂ...</div>
-            </div>
-          ) : Object.keys(groupedByLocation).length === 0 ? (
-            <div className="text-center py-20">
-              <p className="text-white/40">Nu există abonamente pentru filtrele selectate.</p>
-            </div>
-          ) : (
-            <div className="space-y-16">
-              {Object.entries(groupedByLocation).map(([locationName, locationPlans]) => {
-                const location = locations.find(l => l.name === locationName);
-                return (
-                  <div key={locationName} data-testid={`location-${locationName}`}>
-                    {/* Location Header */}
-                    <div className="mb-8">
-                      <div className="flex items-start gap-4 mb-4">
-                        {location?.is_highlighted && (
-                          <span className="bg-[#CCFF00] text-black text-[10px] font-bold uppercase px-2 py-1">
-                            Sediu Principal
-                          </span>
-                        )}
-                      </div>
-                      <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white uppercase mb-2">
-                        {locationName}
+          {activePack && (
+            <div className="animate-fade-in">
+              {/* Header Locație Activă */}
+              <div className="mb-12 flex items-center gap-3 text-white/40">
+                <MapPin size={18} className="text-[#CCFF00]" />
+                <span className="text-sm font-heading tracking-widest uppercase">{activePack.meta}</span>
+              </div>
+
+              {/* Secțiunile de abonamente (Copii / Adulți / etc) */}
+              <div className="space-y-16">
+                {activePack.sections.map((section) => (
+                  <div key={section.title}>
+                    <div className="flex items-center gap-3 mb-6">
+                      <div className="w-2 h-2 bg-[#CCFF00]" />
+                      <h2 className="font-heading text-2xl font-bold text-white uppercase">
+                        {section.title}
                       </h2>
-                      {location && (
-                        <p className="text-white/40 text-sm flex items-center gap-2">
-                          <MapPin size={14} />
-                          {location.address}
-                        </p>
-                      )}
                     </div>
 
-                    {/* Plans Grid */}
-                    <div className="grid md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                      {locationPlans.map((plan) => (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                      {section.offers.map((o) => (
                         <div
-                          key={plan.id}
-                          className={`relative p-6 border transition-all hover:-translate-y-1 ${
-                            plan.badge
-                              ? 'bg-[#CCFF00]/5 border-[#CCFF00]/30'
-                              : 'bg-[#0A0A0A] border-white/5 hover:border-white/10'
+                          key={o.id}
+                          className={`bg-[#121212] border p-6 flex flex-col transition-colors group ${
+                            o.badge === 'Popular' ? 'border-[#CCFF00]/50 hover:border-[#CCFF00]' : 'border-white/5 hover:border-[#CCFF00]/30'
                           }`}
-                          data-testid={`plan-${plan.id}`}
                         >
-                          {/* Badge */}
-                          {plan.badge && (
-                            <span className="absolute top-4 right-4 bg-[#CCFF00] text-black text-[10px] font-bold uppercase px-2 py-1">
-                              {plan.badge}
-                            </span>
-                          )}
-
-                          {/* Category */}
-                          <span className={`text-xs uppercase tracking-wider ${
-                            plan.category === 'KIDS' ? 'text-blue-400' :
-                            plan.category === 'ADULTS' ? 'text-green-400' :
-                            'text-purple-400'
-                          }`}>
-                            {plan.category === 'KIDS' ? 'Copii' :
-                             plan.category === 'ADULTS' ? 'Adulți' : 'Performanță'}
-                          </span>
-
-                          {/* Plan Name */}
-                          <h3 className="font-heading text-lg font-bold text-white uppercase mt-2 mb-4 pr-16">
-                            {plan.activity}
-                          </h3>
-
-                          {/* Price */}
-                          <div className="mb-4">
-                            <span className="font-heading text-3xl font-bold text-[#CCFF00]">
-                              {plan.price}
-                            </span>
-                            <span className="text-white/40 text-sm ml-1">LEI</span>
-                          </div>
-
-                          {/* Details */}
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2 text-white/60">
-                              <Check size={14} className="text-[#CCFF00]" />
-                              {plan.sessions ? `${plan.sessions} ședințe` : 'Ședințe nelimitate'}
-                            </div>
-                            <div className="flex items-center gap-2 text-white/60">
-                              <Check size={14} className="text-[#CCFF00]" />
-                              Valabilitate {plan.validity_days} zile
-                            </div>
-                            {plan.scope !== 'both' && (
-                              <div className="flex items-center gap-2 text-white/60">
-                                <Check size={14} className="text-[#CCFF00]" />
-                                Pentru {plan.scope === 'child' ? 'copii' : 'adulți'}
-                              </div>
+                          {/* Titlu & Badge */}
+                          <div className="flex items-start justify-between gap-4 mb-6">
+                            <h3 className="text-white font-bold text-lg leading-tight group-hover:text-[#CCFF00] transition-colors">
+                              {o.activity}
+                            </h3>
+                            {o.badge && (
+                              <span className={`text-[10px] font-bold uppercase px-2.5 py-1 shrink-0 rounded-sm ${
+                                o.badge === 'Popular' 
+                                  ? 'bg-[#CCFF00] text-black' 
+                                  : 'bg-[#CCFF00]/10 text-[#CCFF00] border border-[#CCFF00]/20'
+                              }`}>
+                                {o.badge}
+                              </span>
                             )}
                           </div>
 
-                          {/* Note */}
-                          {plan.note && (
-                            <div className="mt-4 pt-4 border-t border-white/5">
-                              <p className="text-white/40 text-xs flex items-start gap-2">
-                                <Info size={12} className="flex-shrink-0 mt-0.5" />
-                                {plan.note}
-                              </p>
+                          {/* Detalii (Ședințe, Durată, Valabilitate) */}
+                          <div className="space-y-3 mb-8 flex-grow">
+                            <div className="flex justify-between border-b border-white/5 pb-2 text-sm">
+                              <span className="text-white/40">Ședințe</span>
+                              <span className="text-white font-medium">{o.sessions}</span>
                             </div>
-                          )}
+                            <div className="flex justify-between border-b border-white/5 pb-2 text-sm">
+                              <span className="text-white/40">Durată</span>
+                              <span className="text-white font-medium">{o.duration}</span>
+                            </div>
+                            <div className="flex justify-between border-b border-white/5 pb-2 text-sm">
+                              <span className="text-white/40">Valabil</span>
+                              <span className="text-white font-medium">{o.validity}</span>
+                            </div>
+                          </div>
+
+                          {/* Preț */}
+                          <div className="flex items-end justify-between mt-auto">
+                            <div className="text-xs text-white/30 max-w-[50%] leading-tight">
+                              {o.note}
+                            </div>
+                            <div className="text-4xl font-heading font-black text-white flex items-baseline gap-1">
+                              {o.priceLei}
+                              <span className="text-sm font-bold text-[#CCFF00] uppercase tracking-widest">Lei</span>
+                            </div>
+                          </div>
                         </div>
                       ))}
                     </div>
-
-                    {/* Sibling Discount Notice */}
-                    <div className="mt-6 p-4 bg-[#CCFF00]/10 border border-[#CCFF00]/20 flex items-center gap-3">
-                      <Info size={18} className="text-[#CCFF00] flex-shrink-0" />
-                      <p className="text-white/70 text-sm">
-                        <span className="text-[#CCFF00] font-bold">10% reducere</span> pentru al doilea copil din familie înscris la cursuri.
-                      </p>
-                    </div>
                   </div>
-                );
-              })}
+                ))}
+              </div>
+
+              {/* Note subsol locație */}
+              {activePack.footerNotes?.length > 0 && (
+                <div className="mt-16 bg-[#121212] border border-[#CCFF00]/20 p-8 flex gap-4">
+                  <Info className="text-[#CCFF00] shrink-0" size={24} />
+                  <div>
+                    <h4 className="font-heading text-white uppercase font-bold mb-4">Note Importante</h4>
+                    <ul className="space-y-3">
+                      {activePack.footerNotes.map((n, idx) => (
+                        <li key={idx} className="text-white/60 text-sm flex items-start gap-3 leading-relaxed">
+                          {/* Bulina aliniată perfect cu primul rând de text */}
+                          <div className="w-1.5 h-1.5 rounded-full bg-[#CCFF00]/50 shrink-0 mt-1.5" />
+                          <span>{n}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
+
+              {/* FAQ Rapid - Cum funcționează */}
+              <div className="mt-16 grid gap-6 md:grid-cols-3">
+                <div className="bg-[#050505] border border-white/5 p-6">
+                  <div className="text-[#CCFF00] font-heading font-bold uppercase mb-2">1. Cum mă înscriu?</div>
+                  <div className="text-white/50 text-sm leading-relaxed">
+                    Contactează-ne telefonic sau pe WhatsApp și îți recomandăm oferta potrivită.
+                  </div>
+                </div>
+                <div className="bg-[#050505] border border-white/5 p-6">
+                  <div className="text-[#CCFF00] font-heading font-bold uppercase mb-2">2. Programarea</div>
+                  <div className="text-white/50 text-sm leading-relaxed">
+                    Se stabilește grupa în funcție de vârstă, nivel de experiență și disponibilitate.
+                  </div>
+                </div>
+                <div className="bg-[#050505] border border-white/5 p-6">
+                  <div className="text-[#CCFF00] font-heading font-bold uppercase mb-2">3. Echipament</div>
+                  <div className="text-white/50 text-sm leading-relaxed">
+                    Nu uita să aduci costum de baie, cască, ochelari, prosop și papuci de piscină.
+                  </div>
+                </div>
+              </div>
+
             </div>
           )}
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="py-16 bg-[#0A0A0A]" data-testid="subscriptions-cta">
-        <div className="max-w-3xl mx-auto px-6 text-center">
-          <h2 className="font-heading text-2xl sm:text-3xl font-bold text-white uppercase mb-4">
-            Ai Întrebări?
-          </h2>
-          <p className="text-white/60 mb-8">
-            Contactează-ne pentru mai multe informații despre abonamente sau pentru a te înscrie.
-          </p>
-          <div className="flex flex-wrap justify-center gap-4">
-            <a
-              href="tel:0745312668"
-              className="btn-primary px-8 py-4"
-            >
-              Sună: 0745 312 668
-            </a>
-            <a
-              href="https://wa.me/40745312668"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-secondary px-8 py-4"
-            >
-              WhatsApp
-            </a>
-          </div>
         </div>
       </section>
     </PublicLayout>

@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+// FIX: Am adăugat fallback-ul 'http://localhost:8000' 
+// Astfel, dacă fișierul .env lipsește sau nu e citit corect, nu se mai strică rutele.
+let API_URL = process.env.REACT_APP_BACKEND_URL;
+if (!API_URL || API_URL === 'undefined') {
+  API_URL = 'http://localhost:8000';
+}
 
 const getToken = () => localStorage.getItem('nautica_token');
 
@@ -11,8 +16,12 @@ const authHeader = () => {
 
 const api = axios.create({
   baseURL: `${API_URL}/api`,
+  headers: {
+    'Content-Type': 'application/json',
+  }
 });
 
+// Interceptor pentru a trimite automat token-ul la fiecare request
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
@@ -21,12 +30,17 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Interceptor pentru a prinde erorile (în special 401 - Unauthorized)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Dacă token-ul a expirat sau e invalid, curățăm și dăm afară userul
     if (error.response?.status === 401) {
       localStorage.removeItem('nautica_token');
-      window.location.href = '/login';
+      // Folosim window.location.href pentru a forța o reîncărcare completă a aplicației
+      if (window.location.pathname !== '/login') {
+         window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
@@ -81,7 +95,7 @@ export const attendanceAPI = {
   export: (params) => api.get('/export/attendance', { params }),
 };
 
-// Locations
+// Locations (Păstrate pentru Admin Dashboard)
 export const locationsAPI = {
   getAll: () => api.get('/locations'),
   getOne: (id) => api.get(`/locations/${id}`),
@@ -90,7 +104,7 @@ export const locationsAPI = {
   delete: (id) => api.delete(`/locations/${id}`),
 };
 
-// Coaches
+// Coaches (Păstrate pentru viitoare funcționalități de Admin)
 export const coachesAPI = {
   getAll: () => api.get('/coaches'),
   create: (data) => api.post('/coaches', data),
