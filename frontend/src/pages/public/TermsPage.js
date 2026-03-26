@@ -32,11 +32,10 @@ const TermsPage = () => {
                 2. Înscrierea la Cursuri
               </h2>
               <ul className="text-white/60 space-y-2">
-                <li>• Înscrierea se face prin intermediul administrației clubului</li>
+                <li>• Înscrierea se face prin intermediul administrației clubului și recepției</li>
                 <li>• Nu există înscriere publică online - conturile sunt create de personal</li>
                 <li>• Pentru minori, este necesară semnătura părintelui/tutorelui legal</li>
-                <li>• Fiecare participant trebuie să prezinte aviz medical înainte de prima ședință</li>
-              </ul>
+                </ul>
             </section>
 
             <section className="mb-8">
@@ -44,22 +43,24 @@ const TermsPage = () => {
                 3. Abonamente și Plăți
               </h2>
               <ul className="text-white/60 space-y-2">
-                <li>• Plata se efectuează în avans pentru perioada abonamentului</li>
+                <li>• Abonamentele se pot cumpăra de la recepție sau de la staff-ul clubului</li>
+                <li>• În cazul în care vi se oferă abonamente de către o persoane necunoscută, vă rugăm să verificați autenticitatea acestora la numărul de telefon sau pe email-ul de la finalul acestei pagini</li>
+                <li>• Plata se efectuează în avans pentru perioada abonamentului sau la recepția hotelului</li>
                 <li>• Abonamentele sunt nominale și netransferabile</li>
-                <li>• Ședințele neutilizate nu se reportează în luna următoare, cu excepția cazurilor de boală (certificat medical)</li>
-                <li>• Reducerea de 10% pentru frați se aplică pentru al doilea copil din familie</li>
+                <li>• Ședințele neutilizate nu se transferă în luna următoare, cu excepția cazurilor de boală (certificat medical)</li>
+                <li>• Reducerea de 10% pentru frați se aplică pentru toate abonamentele cumpărate împreună</li>
               </ul>
             </section>
 
             <section className="mb-8">
               <h2 className="font-heading text-xl font-bold text-white uppercase mb-4">
-                4. Prezența și Anulări
+                4. Prezență
               </h2>
               <ul className="text-white/60 space-y-2">
                 <li>• Prezența se înregistrează la fiecare ședință</li>
-                <li>• Anulările trebuie comunicate cu minimum 24 de ore înainte</li>
-                <li>• Absențele nemotivate duc la pierderea ședinței</li>
-                <li>• În caz de boală, se acceptă recuperarea ședințelor cu certificat medical</li>
+                <li>• În cazul în care participantul nu se poate prezenta, poate participa în altă zi</li>
+                <li>• Este de preferat ca participantul să aibă la în prezența sa codul QR pe telefon, ca poză sau pe cardul clubului</li>
+                <li>• În cazul în care participantul nu are codul QR, prezența se poate înregistra manual de către antrenor sau recepție, dar este responsabilitatea participantului să aibă codul QR la îndemână pentru a facilita check-in-ul rapid și eficient</li>
               </ul>
             </section>
 
@@ -69,7 +70,7 @@ const TermsPage = () => {
               </h2>
               <ul className="text-white/60 space-y-2">
                 <li>• Dușul înainte de intrarea în bazin este obligatoriu</li>
-                <li>• Echipamentul de înot (costum, ochelari, cască) este obligatoriu</li>
+                <li>• Echipamentul de înot (costum, ochelari, cască, prosop) este obligatoriu</li>
                 <li>• Respectarea indicațiilor antrenorului este obligatorie</li>
                 <li>• Comportamentul necorespunzător poate duce la excludere</li>
               </ul>

@@ -1,10 +1,11 @@
 import axios from 'axios';
 
-// FIX: Am adăugat fallback-ul 'http://localhost:8000' 
-// Astfel, dacă fișierul .env lipsește sau nu e citit corect, nu se mai strică rutele.
-let API_URL = process.env.REACT_APP_BACKEND_URL;
+// Fallback antiglonț: Dacă variabila lipsește sau e textul "undefined"
+let API_URL = process.env.REACT_APP_API_URL || process.env.REACT_APP_BACKEND_URL;
 if (!API_URL || API_URL === 'undefined') {
-  API_URL = 'http://localhost:8000';
+  API_URL = 'http://localhost:8000/api';
+} else if (!API_URL.endsWith('/api')) {
+  API_URL = `${API_URL}/api`;
 }
 
 const getToken = () => localStorage.getItem('nautica_token');
@@ -15,13 +16,13 @@ const authHeader = () => {
 };
 
 const api = axios.create({
-  baseURL: `${API_URL}/api`,
+  baseURL: API_URL,
   headers: {
     'Content-Type': 'application/json',
   }
 });
 
-// Interceptor pentru a trimite automat token-ul la fiecare request
+// Interceptor pentru a trimite automat token-ul
 api.interceptors.request.use((config) => {
   const token = getToken();
   if (token) {
@@ -30,14 +31,12 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Interceptor pentru a prinde erorile (în special 401 - Unauthorized)
+// Interceptor pentru erori (în special 401 - Unauthorized)
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Dacă token-ul a expirat sau e invalid, curățăm și dăm afară userul
     if (error.response?.status === 401) {
       localStorage.removeItem('nautica_token');
-      // Folosim window.location.href pentru a forța o reîncărcare completă a aplicației
       if (window.location.pathname !== '/login') {
          window.location.href = '/login';
       }
@@ -95,7 +94,7 @@ export const attendanceAPI = {
   export: (params) => api.get('/export/attendance', { params }),
 };
 
-// Locations (Păstrate pentru Admin Dashboard)
+// Locations 
 export const locationsAPI = {
   getAll: () => api.get('/locations'),
   getOne: (id) => api.get(`/locations/${id}`),
@@ -104,7 +103,7 @@ export const locationsAPI = {
   delete: (id) => api.delete(`/locations/${id}`),
 };
 
-// Coaches (Păstrate pentru viitoare funcționalități de Admin)
+// Coaches
 export const coachesAPI = {
   getAll: () => api.get('/coaches'),
   create: (data) => api.post('/coaches', data),

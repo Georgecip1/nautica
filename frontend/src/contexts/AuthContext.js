@@ -1,7 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
-import axios from 'axios';
-
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+import { authAPI } from '../lib/api';
 
 const AuthContext = createContext(null);
 
@@ -20,32 +18,30 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token) {
+      const fetchUser = async () => {
+        try {
+          // Folosim instanța curată din api.js
+          const response = await authAPI.getMe();
+          setUser(response.data);
+        } catch (error) {
+          console.error('Failed to fetch user:', error);
+          logout();
+        } finally {
+          setLoading(false);
+        }
+      };
+      
       fetchUser();
     } else {
       setLoading(false);
     }
   }, [token]);
 
-  const fetchUser = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/auth/me`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      setUser(response.data);
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
-      logout();
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const login = async (email, password) => {
-    const response = await axios.post(`${API_URL}/api/auth/login`, {
-      email,
-      password
-    });
+    // Apelăm authAPI direct
+    const response = await authAPI.login(email, password);
     const { token: newToken, user: userData } = response.data;
+    
     localStorage.setItem('nautica_token', newToken);
     setToken(newToken);
     setUser(userData);

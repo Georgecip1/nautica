@@ -35,19 +35,19 @@ const COACHES_TEASER = [
     id: 1,
     name: "Ovidiu Galeru",
     role: "Profesor • Antrenor • Coordonator",
-    photo: "/team/ovidiu.jpg" // Asigură-te că există în /public/team/
+    photo: "/team/ovidiu.jpeg" 
   },
   {
     id: 2,
     name: "Cornelia Galeru",
     role: "Antrenor • Coordonator",
-    photo: "/team/cornelia.jpg"
+    photo: "/team/cornelia.jpeg"
   },
   {
     id: 3,
     name: "Mara Nicola Galeru",
     role: "Antrenor",
-    photo: "/team/mara.jpg"
+    photo: "/team/mara.jpeg"
   }
 ];
 
@@ -86,8 +86,6 @@ const faqs = [
 
 const HomePage = () => {
   const [openFaq, setOpenFaq] = useState(null);
-
-  // Am eliminat complet useEffect-ul și stările (useState) inutile care încetineau pagina
 
   return (
     <PublicLayout>
@@ -157,8 +155,8 @@ const HomePage = () => {
                 key={index}
                 className="group p-8 bg-[#0A0A0A] border border-white/5 hover:border-[#CCFF00]/30 transition-all duration-300"
               >
-                <div className="w-12 h-12 bg-[#CCFF00]/10 flex items-center justify-center mb-6 group-hover:bg-[#CCFF00]/20 transition-colors rounded-sm">
-                  <card.icon className="text-[#CCFF00]" size={24} />
+                <div className="w-12 h-12 bg-[#CCFF00]/10 flex items-center justify-center mb-6 group-hover:bg-[#CCFF00] group-hover:text-black transition-colors rounded-sm text-[#CCFF00]">
+                  <card.icon size={24} />
                 </div>
                 <h3 className="font-heading text-xl font-bold text-white uppercase mb-3">
                   {card.title}
@@ -172,7 +170,7 @@ const HomePage = () => {
         </div>
       </section>
 
-      {/* Coaches Teaser - ACUM ESTE HARDCODAT */}
+      {/* Coaches Teaser - Stilizat conform About Page */}
       <section className="py-24 md:py-32 bg-[#0A0A0A]" data-testid="coaches-section">
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 mb-12">
@@ -186,10 +184,10 @@ const HomePage = () => {
             </div>
             <Link
               to="/about"
-              className="flex items-center gap-2 text-white/60 hover:text-[#CCFF00] transition-colors text-sm font-heading uppercase tracking-wider"
+              className="flex items-center gap-2 text-white/60 hover:text-[#CCFF00] transition-colors text-sm font-heading uppercase tracking-wider group"
             >
               Vezi toți antrenorii
-              <ChevronRight size={16} />
+              <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
 
@@ -197,22 +195,25 @@ const HomePage = () => {
             {COACHES_TEASER.map((coach) => (
               <div
                 key={coach.id}
-                className="group relative overflow-hidden bg-[#121212] border border-white/5 hover:border-[#CCFF00]/30 transition-all"
+                className="group relative overflow-hidden bg-[#121212] border border-white/5 hover:border-[#CCFF00]/50 transition-all duration-500 rounded-sm cursor-pointer"
               >
-                <div className="aspect-[4/5] overflow-hidden">
+                <div className="aspect-[4/5] overflow-hidden relative">
                   <img
                     src={coach.photo}
                     alt={coach.name}
-                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 transition-all duration-500"
+                    className="w-full h-full object-cover filter grayscale group-hover:grayscale-0 group-hover:scale-110 transition-all duration-700"
                     onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1584380931214-dbb5b72e7fd0?w=400'; }}
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-80" />
+                  {/* Gradient Overlay mai pronunțat jos */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-[#050505]/40 to-transparent opacity-90 group-hover:opacity-70 transition-opacity duration-500" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-6 z-10">
-                  <p className="text-[#CCFF00] text-xs font-heading uppercase tracking-widest mb-2">
+                
+                {/* Text glisant pe hover */}
+                <div className="absolute bottom-0 left-0 right-0 p-6 z-10 transform translate-y-2 group-hover:translate-y-0 transition-transform duration-500">
+                  <p className="text-[#CCFF00] text-xs font-heading uppercase tracking-widest mb-2 opacity-80 group-hover:opacity-100 transition-opacity">
                     {coach.role}
                   </p>
-                  <h3 className="font-heading text-xl font-bold text-white uppercase">
+                  <h3 className="font-heading text-2xl font-bold text-white uppercase tracking-tight">
                     {coach.name}
                   </h3>
                 </div>
@@ -238,15 +239,15 @@ const HomePage = () => {
             {testimonials.map((testimonial, index) => (
               <div
                 key={index}
-                className="p-8 bg-[#0A0A0A] border border-white/5"
+                className="p-8 bg-[#0A0A0A] border border-white/5 hover:bg-white/[0.02] transition-colors"
               >
-                <div className="text-[#CCFF00] text-4xl font-serif mb-4">"</div>
-                <p className="text-white/70 mb-6 leading-relaxed">
+                <div className="text-[#CCFF00] text-5xl font-serif mb-2 leading-none">"</div>
+                <p className="text-white/70 mb-8 leading-relaxed text-sm">
                   {testimonial.text}
                 </p>
-                <div>
-                  <p className="font-heading text-white font-bold">{testimonial.name}</p>
-                  <p className="text-white/40 text-sm">{testimonial.role}</p>
+                <div className="border-t border-white/10 pt-4 mt-auto">
+                  <p className="font-heading text-white font-bold uppercase tracking-tight">{testimonial.name}</p>
+                  <p className="text-[#CCFF00] text-[10px] uppercase font-black tracking-widest mt-1">{testimonial.role}</p>
                 </div>
               </div>
             ))}
@@ -270,44 +271,52 @@ const HomePage = () => {
             {faqs.map((faq, index) => (
               <div
                 key={index}
-                className="border border-white/10 overflow-hidden bg-[#050505]"
+                className="border border-white/5 overflow-hidden bg-[#050505] transition-colors hover:border-[#CCFF00]/20"
               >
                 <button
                   onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                  className="w-full flex items-center justify-between p-6 text-left hover:bg-white/5 transition-colors"
+                  className="w-full flex items-center justify-between p-6 text-left"
                 >
-                  <span className="font-heading text-white font-medium pr-4">{faq.question}</span>
+                  <span className="font-heading text-white font-bold tracking-wide pr-4">{faq.question}</span>
                   <ChevronRight
                     size={20}
-                    className={`text-[#CCFF00] flex-shrink-0 transition-transform ${
+                    className={`text-[#CCFF00] flex-shrink-0 transition-transform duration-300 ${
                       openFaq === index ? 'rotate-90' : ''
                     }`}
                   />
                 </button>
-                {openFaq === index && (
-                  <div className="px-6 pb-6 text-white/60 text-sm leading-relaxed animate-fade-in">
-                    {faq.answer}
-                  </div>
-                )}
+                <div 
+                  className={`px-6 text-white/60 text-sm leading-relaxed transition-all duration-300 overflow-hidden ${
+                    openFaq === index ? 'max-h-40 pb-6 opacity-100' : 'max-h-0 opacity-0'
+                  }`}
+                >
+                  {faq.answer}
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 md:py-32 bg-[#CCFF00]" data-testid="cta-section">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="font-heading text-3xl sm:text-4xl lg:text-5xl font-black text-black uppercase mb-6">
+      {/* CTA Section - PUN LOCAL */}
+      <section className="py-24 md:py-32 bg-[#CCFF00] relative overflow-hidden" data-testid="cta-section">
+        {/* Un fundal subtil pentru CTA ca să arate mai premium */}
+        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23000000\' fill-opacity=\'1\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")' }} />
+        
+        <div className="max-w-4xl mx-auto px-6 text-center relative z-10">
+          <span className="inline-block text-black font-black uppercase tracking-[0.3em] text-sm mb-4">
+            Singurele valuri din Bacău pe care abia aștepți să le prinzi!
+          </span>
+          <h2 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-black text-black uppercase mb-6 leading-none tracking-tighter">
             Nu mai sta pe mal, <br className="hidden sm:block" /> intră cu noi în val!
           </h2>
-          <p className="text-black/70 mb-10 max-w-2xl mx-auto font-medium">
-            Fie că ești la primul contact cu apa sau vrei să îți rafinezi tehnica, echipa Nautica te ajută să ajungi la destinație.
+          <p className="text-black/80 mb-10 max-w-2xl mx-auto font-bold tracking-wide">
+            Fie că ești la primul contact cu apa sau vrei să îți rafinezi tehnica, echipa Nautica te ajută să ajungi rapid la destinație.
           </p>
           <div className="flex flex-wrap justify-center gap-4">
             <a
               href="tel:0745312668"
-              className="bg-black text-white px-8 py-4 font-heading font-bold uppercase tracking-wider flex items-center gap-2 hover:bg-black/80 transition-colors"
+              className="bg-black text-[#CCFF00] px-8 py-5 font-heading font-black uppercase tracking-widest flex items-center gap-3 hover:bg-black/80 hover:scale-105 transition-all"
             >
               <Phone size={18} />
               Sună Acum
@@ -316,7 +325,7 @@ const HomePage = () => {
               href="https://wa.me/40745312668"
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-black/10 text-black px-8 py-4 font-heading font-bold uppercase tracking-wider hover:bg-black/20 transition-colors"
+              className="bg-black/10 text-black border-2 border-black px-8 py-5 font-heading font-black uppercase tracking-widest hover:bg-black hover:text-[#CCFF00] hover:scale-105 transition-all"
             >
               WhatsApp
             </a>

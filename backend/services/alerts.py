@@ -3,13 +3,18 @@ from datetime import datetime, timezone
 from core.db import db
 from models.attendance import Alert
 
-
 async def generate_alerts():
     now = datetime.now(timezone.utc)
     users = await db.users.find({}, {'_id': 0}).to_list(10000)
 
     for user in users:
-        persons = [{'id': user['id'], 'type': 'user', 'name': user['name']}]
+        persons = []
+        
+        # EXCLUDEM STAFF-UL: Adăugăm adultul în lista de verificare DOAR dacă este client (USER)
+        if user.get('role', 'USER') == 'USER':
+            persons.append({'id': user['id'], 'type': 'user', 'name': user['name']})
+            
+        # Păstrăm verificarea copiilor (chiar dacă părintele e staff, copilul are nevoie de abonament)
         for child in user.get('children', []):
             persons.append({'id': child['id'], 'type': 'child', 'name': child['name']})
 

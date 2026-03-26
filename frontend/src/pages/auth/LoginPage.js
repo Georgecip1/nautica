@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { toast } from 'sonner';
@@ -13,28 +13,25 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already logged in
-  if (user) {
-    if (user.role === 'USER') {
-      navigate('/portal');
-    } else {
-      navigate('/admin');
+  // Redirect automat dacă ești deja logat
+  useEffect(() => {
+    if (user) {
+      if (user.role === 'USER') {
+        navigate('/portal');
+      } else {
+        navigate('/admin');
+      }
     }
-  }
+  }, [user, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const userData = await login(form.email, form.password);
+      await login(form.email, form.password);
       toast.success('Autentificare reușită!');
-      
-      if (userData.role === 'USER') {
-        navigate('/portal');
-      } else {
-        navigate('/admin');
-      }
+      // Redirecționarea o va face useEffect-ul de mai sus imediat ce "user" se actualizează
     } catch (error) {
       const message = error.response?.data?.detail || 'Eroare la autentificare';
       toast.error(message);
@@ -45,7 +42,7 @@ const LoginPage = () => {
 
   return (
     <div className="min-h-screen bg-[#050505] flex">
-      {/* Left side - Form */}
+      {/* Partea Stângă - Formular */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center px-8 md:px-16 lg:px-24">
         <div className="max-w-md mx-auto w-full">
           {/* Logo */}
@@ -145,7 +142,7 @@ const LoginPage = () => {
         </div>
       </div>
 
-      {/* Right side - Image */}
+      {/* Partea Dreaptă - Imagine */}
       <div className="hidden lg:block w-1/2 relative">
         <div 
           className="absolute inset-0 bg-cover bg-center"

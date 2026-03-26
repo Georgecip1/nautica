@@ -138,7 +138,7 @@ const SubscriptionsPage = () => {
                 Reducere pentru Familii
               </h3>
               <p className="text-white/70 text-sm leading-relaxed">
-                Încurajăm sportul în familie! Oferim <strong className="text-white font-bold">10% reducere</strong> din prețul abonamentului pentru al doilea copil înscris (frate/soră). Se aplică pentru orice pachet de ședințe.
+                Încurajăm sportul în familie! Oferim <strong className="text-white font-bold">10% reducere</strong> din prețul total al abonamentelor pentru 2 sau mai mulți copii înscriși (frate/soră). Se aplică pentru orice pachet de ședințe.
               </p>
             </div>
           </div>

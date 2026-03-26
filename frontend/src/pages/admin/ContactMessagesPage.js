@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { contactAPI } from "../../lib/api";
 import { toast } from "sonner";
-import { Mail, Phone, CheckCheck, Search } from "lucide-react";
+import { Mail, Phone, CheckCheck, Search, Inbox } from "lucide-react";
 import { format } from "date-fns";
 import { ro } from "date-fns/locale";
 
@@ -11,7 +11,7 @@ const ContactMessagesPage = () => {
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
 
-  const fetchMessages = async () => {
+  const fetchMessages = useCallback(async () => {
     try {
       const response = await contactAPI.getMessages();
       setMessages(response.data);
@@ -20,11 +20,11 @@ const ContactMessagesPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchMessages();
-  }, []);
+  }, [fetchMessages]);
 
   const filteredMessages = useMemo(() => {
     return messages.filter((message) => {
@@ -37,84 +37,84 @@ const ContactMessagesPage = () => {
   const handleMarkRead = async (id) => {
     try {
       await contactAPI.markRead(id);
-      setMessages((current) => current.map((message) => message.id === id ? { ...message, is_read: true } : message));
-      toast.success("Mesaj marcat ca citit");
+      setMessages((current) => current.map((m) => m.id === id ? { ...m, is_read: true } : m));
+      toast.success("Marcat ca citit");
     } catch (error) {
-      toast.error(error.response?.data?.detail || "Eroare la actualizare");
+      toast.error("Eroare sistem");
     }
   };
 
-  const unreadCount = messages.filter((message) => !message.is_read).length;
+  const unreadCount = messages.filter((m) => !m.is_read).length;
 
   return (
-    <div className="space-y-6" data-testid="contact-messages-page">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="font-heading text-3xl font-bold text-white uppercase">Mesaje contact</h1>
-          <p className="text-white/40 text-sm mt-1">Mesajele trimise din formularul public</p>
+          <h1 className="font-heading text-3xl font-bold text-white uppercase tracking-tight">Inbox Contact</h1>
+          <p className="text-white/40 text-sm mt-1">Cereri venite de pe site-ul public</p>
         </div>
-        <div className="bg-[#CCFF00]/10 border border-[#CCFF00]/20 px-4 py-3 text-[#CCFF00] text-sm">
-          Necitite: <strong>{unreadCount}</strong>
+        <div className="bg-white/5 border border-white/10 px-4 py-3 flex items-center gap-3">
+          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Mesaje Noi:</span>
+          <span className="text-[#CCFF00] font-heading font-bold text-xl">{unreadCount}</span>
         </div>
       </div>
 
-      <div className="grid md:grid-cols-[1fr_auto] gap-4">
-        <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/30" size={16} />
+      <div className="flex flex-col sm:flex-row gap-4 bg-[#0A0A0A] p-4 border border-white/5">
+        <div className="relative flex-1">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-white/20" size={16} />
           <input
-            type="text"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Caută după nume, email sau mesaj..."
-            className="w-full bg-[#0A0A0A] border border-white/10 pl-10 pr-4 py-3 text-white placeholder:text-white/30"
+            type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+            placeholder="Caută în mesaje..."
+            className="w-full bg-[#050505] border border-white/10 pl-12 pr-4 py-3 text-white focus:border-[#CCFF00] outline-none transition-all placeholder:text-white/10"
           />
         </div>
         <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="bg-[#0A0A0A] border border-white/10 px-4 py-3 text-white"
+          value={filter} onChange={(e) => setFilter(e.target.value)}
+          className="bg-[#050505] border border-white/10 px-6 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-[#CCFF00]"
         >
-          <option value="all">Toate mesajele</option>
-          <option value="unread">Necitite</option>
-          <option value="read">Citite</option>
+          <option value="all">Istoric Complet</option>
+          <option value="unread">Doar Necitite</option>
+          <option value="read">Deja Citite</option>
         </select>
       </div>
 
-      <div className="bg-[#0A0A0A] border border-white/5">
+      <div className="bg-[#0A0A0A] border border-white/5 overflow-hidden">
         {loading ? (
-          <div className="p-8 text-center text-[#CCFF00] animate-pulse">SE ÎNCARCĂ...</div>
+           <div className="p-16 text-center text-[#CCFF00] animate-pulse font-heading text-xs tracking-widest uppercase">Sincronizare Inbox...</div>
         ) : filteredMessages.length === 0 ? (
-          <div className="p-8 text-center text-white/40">Nu există mesaje pentru filtrul selectat</div>
+          <div className="p-20 text-center flex flex-col items-center justify-center gap-4 opacity-30">
+             <Inbox size={40} className="text-white" />
+             <p className="text-white text-xs font-bold uppercase tracking-widest">Inbox Gol</p>
+          </div>
         ) : (
           <div className="divide-y divide-white/5">
-            {filteredMessages.map((message) => (
-              <div key={message.id} className="p-5 space-y-4">
-                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h3 className="text-white font-semibold">{message.name}</h3>
-                      {!message.is_read && (
-                        <span className="text-[10px] uppercase px-2 py-0.5 bg-red-500/20 text-red-400">Nou</span>
-                      )}
+            {filteredMessages.map((msg) => (
+              <div key={msg.id} className={`p-6 transition-colors ${!msg.is_read ? 'bg-white/[0.03] border-l-2 border-l-[#CCFF00]' : 'border-l-2 border-transparent hover:bg-white/[0.01]'}`}>
+                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 flex-wrap mb-2">
+                      <h3 className={`text-lg font-bold uppercase tracking-tight ${!msg.is_read ? 'text-white' : 'text-white/60'}`}>{msg.name}</h3>
+                      {!msg.is_read && <span className="text-[9px] uppercase px-2 py-0.5 bg-[#CCFF00]/20 text-[#CCFF00] font-black tracking-widest">Mesaj Nou</span>}
                     </div>
-                    <div className="flex flex-wrap items-center gap-4 mt-2 text-white/40 text-xs">
-                      <span className="flex items-center gap-1"><Mail size={12} /> {message.email}</span>
-                      {message.phone && <span className="flex items-center gap-1"><Phone size={12} /> {message.phone}</span>}
-                      <span>{format(new Date(message.created_at), "dd MMM yyyy, HH:mm", { locale: ro })}</span>
+                    
+                    <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-[11px] font-bold uppercase tracking-widest text-white/30">
+                      <span className="flex items-center gap-2"><Mail size={14} className="text-[#CCFF00]/40" /> {msg.email}</span>
+                      {msg.phone && <span className="flex items-center gap-2"><Phone size={14} className="text-[#CCFF00]/40" /> {msg.phone}</span>}
+                    </div>
+
+                    <div className="bg-[#050505] border border-white/5 p-5 text-white/70 text-sm leading-relaxed whitespace-pre-wrap font-medium">
+                      {msg.message}
+                    </div>
+                    <div className="mt-3 text-[10px] text-white/20 uppercase font-black tracking-widest">
+                       Primit la: {format(new Date(msg.created_at), "dd MMM yyyy, HH:mm", { locale: ro })}
                     </div>
                   </div>
-                  {!message.is_read && (
-                    <button
-                      onClick={() => handleMarkRead(message.id)}
-                      className="btn-secondary px-4 py-2 inline-flex items-center gap-2"
-                    >
-                      <CheckCheck size={14} />
-                      Marchează citit
+                  
+                  {!msg.is_read && (
+                    <button onClick={() => handleMarkRead(msg.id)} className="btn-secondary px-4 py-3 inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-widest self-start">
+                      <CheckCheck size={16} /> Finalizat
                     </button>
                   )}
-                </div>
-                <div className="bg-[#121212] border border-white/5 p-4 text-white/80 whitespace-pre-wrap leading-6">
-                  {message.message}
                 </div>
               </div>
             ))}
