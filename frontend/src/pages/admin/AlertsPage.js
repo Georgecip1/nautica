@@ -38,7 +38,6 @@ const AlertsPage = () => {
     fetchAlerts();
   }, [fetchAlerts]);
 
-  // FIX: Prevenim propagarea click-ului și gestionăm corect ambele formate de ID
   const handleMarkSeen = async (alert, e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -98,7 +97,7 @@ const AlertsPage = () => {
         <button
           onClick={() => setFilter('unseen')}
           className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${
-            filter === 'unseen' ? 'bg-[#CCFF00] text-black' : 'bg-white/5 text-white/40 hover:bg-white/10'
+            filter === 'unseen' ? 'bg-[#6db025] text-black' : 'bg-white/5 text-white/40 hover:bg-white/10'
           }`}
         >
           Doar Noi
@@ -106,7 +105,7 @@ const AlertsPage = () => {
         <button
           onClick={() => setFilter('all')}
           className={`px-6 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${
-            filter === 'all' ? 'bg-[#CCFF00] text-black' : 'bg-white/5 text-white/40 hover:bg-white/10'
+            filter === 'all' ? 'bg-[#6db025] text-black' : 'bg-white/5 text-white/40 hover:bg-white/10'
           }`}
         >
           Istoric Complet
@@ -116,7 +115,7 @@ const AlertsPage = () => {
       {/* Lista */}
       <div className="bg-[#0A0A0A] border border-white/5 overflow-hidden">
         {loading ? (
-          <div className="p-16 text-center text-[#CCFF00] animate-pulse font-heading text-xs tracking-widest uppercase">
+          <div className="p-16 text-center text-[#6db025] animate-pulse font-heading text-xs tracking-widest uppercase">
             Se încarcă alertele...
           </div>
         ) : alerts.length === 0 ? (
@@ -136,7 +135,7 @@ const AlertsPage = () => {
                 <div
                   key={alert.id || alert._id}
                   className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 transition-all ${
-                    !alert.is_seen ? 'bg-white/[0.03] border-l-2 border-l-[#CCFF00]' : 'border-l-2 border-l-transparent hover:bg-white/[0.01]'
+                    !alert.is_seen ? 'bg-white/[0.03] border-l-2 border-l-[#6db025]' : 'border-l-2 border-l-transparent hover:bg-white/[0.01]'
                   }`}
                 >
                   <div className="flex items-start gap-4">
@@ -159,7 +158,7 @@ const AlertsPage = () => {
                         }`}>
                           {config.label}
                         </span>
-                        {!alert.is_seen && <span className="text-[9px] text-[#CCFF00] font-black uppercase tracking-widest">Nerezolvată</span>}
+                        {!alert.is_seen && <span className="text-[9px] text-[#6db025] font-black uppercase tracking-widest">Nerezolvată</span>}
                       </div>
                       <p className={`text-sm md:text-base pr-4 ${!alert.is_seen ? 'text-white font-bold' : 'text-white/60 font-medium'}`}>
                         {alert.message}
@@ -169,7 +168,7 @@ const AlertsPage = () => {
                           {format(new Date(alert.created_at), 'dd MMM yyyy • HH:mm', { locale: ro })}
                         </span>
                         <span className="text-white/10">•</span>
-                        <Link to={`/admin/utilizatori/${alert.user_id}`} className="text-[#CCFF00] hover:underline flex items-center gap-1.5 z-10 relative">
+                        <Link to={`/admin/utilizatori/${alert.user_id}`} className="text-[#6db025] hover:underline flex items-center gap-1.5 z-10 relative">
                           <UserIcon size={12} /> Vezi Cont Client
                         </Link>
                       </div>
@@ -179,7 +178,7 @@ const AlertsPage = () => {
                   {!alert.is_seen && (
                     <button
                       onClick={(e) => handleMarkSeen(alert, e)}
-                      className="flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-[#CCFF00] text-white/40 hover:text-black transition-colors rounded-sm sm:self-center z-10 relative cursor-pointer"
+                      className="flex items-center justify-center gap-2 px-4 py-3 bg-white/5 hover:bg-[#6db025] text-white/40 hover:text-black transition-colors rounded-sm sm:self-center z-10 relative cursor-pointer"
                     >
                       <Check size={16} /> <span className="text-[10px] font-black uppercase tracking-widest">Rezolvat</span>
                     </button>

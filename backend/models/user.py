@@ -28,13 +28,20 @@ class UserCreate(BaseModel):
     name: str
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    secondary_parent_name: Optional[str] = None
+    secondary_parent_phone: Optional[str] = None
     role: str = 'USER'
+    is_shared_family: bool = False
 
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None
     email: Optional[EmailStr] = None
     phone: Optional[str] = None
+    secondary_parent_name: Optional[str] = None
+    secondary_parent_phone: Optional[str] = None
+    role: Optional[str] = None
+    is_shared_family: Optional[bool] = None
 
 
 class User(BaseModel):
@@ -44,7 +51,10 @@ class User(BaseModel):
     name: str
     email: Optional[str] = None
     phone: Optional[str] = None
+    secondary_parent_name: Optional[str] = None
+    secondary_parent_phone: Optional[str] = None
     role: str = 'USER'
+    is_shared_family: bool = False
     password_hash: Optional[str] = None
     password_setup_token: Optional[str] = None
     password_setup_expires: Optional[str] = None
@@ -60,12 +70,16 @@ class UserResponse(BaseModel):
     name: str
     email: Optional[str] = None
     phone: Optional[str] = None
+    secondary_parent_name: Optional[str] = None
+    secondary_parent_phone: Optional[str] = None
     role: str
+    is_shared_family: bool = False
     qr_token: Optional[str] = None
     children: List[Child] = []
     created_at: str
     last_activity: Optional[str] = None
     marked_for_deletion: bool = False
+    status_color: Optional[str] = "none"
 
 
 class LoginRequest(BaseModel):

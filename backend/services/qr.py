@@ -1,47 +1,70 @@
-import secrets
-from fastapi import HTTPException
-
+from fastapi import APIRouter, HTTPException, Depends
+from core.auth import require_admin
 from core.db import db
+from routes.subscriptions import check_and_activate_queued
 
+router = APIRouter(tags=['qr'])
 
-async def resolve_person_by_qr_token(qr_token: str):
-    user = await db.users.find_one({'qr_token': qr_token}, {'_id': 0})
+@router.get('/scan/{token}')
+async def scan_qr_token(token: str, admin: dict = Depends(require_admin)):
+    """
+    Ruta apelata cand antrenorul indreapta camera catre un cod QR.
+    Valideaza token-ul si returneaza datele abonamentului curent pt confirmare pe ecran.
+    """
+    person_id = None
+    person_type = None
+    person_name = None
+    user_id = None
+
+    # 1. Cautam daca apartine Titularului de Cont
+    user = await db.users.find_one({'qr_token': token, 'marked_for_deletion': False})
     if user:
-        return {
-            'valid': True,
-            'person_id': user['id'],
-            'person_type': 'user',
-            'person_name': user['name'],
-            'user_id': user['id'],
-        }
-
-    user = await db.users.find_one({'children.qr_token': qr_token}, {'_id': 0})
-    if user:
-        for child in user.get('children', []):
-            if child.get('qr_token') == qr_token:
-                return {
-                    'valid': True,
-                    'person_id': child['id'],
-                    'person_type': 'child',
-                    'person_name': child['name'],
-                    'user_id': user['id'],
-                }
-
-    return {'valid': False}
-
-
-async def regenerate_qr_token(person_id: str, person_type: str = 'user') -> str:
-    new_token = secrets.token_urlsafe(32)
-
-    if person_type == 'user':
-        result = await db.users.update_one({'id': person_id}, {'$set': {'qr_token': new_token}})
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail='Utilizator negăsit')
+        person_id = user['id']
+        person_type = 'user'
+        person_name = user['name']
+        user_id = user['id']
     else:
-        result = await db.users.update_one(
-            {'children.id': person_id}, {'$set': {'children.$.qr_token': new_token}}
-        )
-        if result.modified_count == 0:
-            raise HTTPException(status_code=404, detail='Copil negăsit')
+        # 2. Cautam daca apartine unui Copil din contul unei familii
+        user = await db.users.find_one({'children.qr_token': token, 'marked_for_deletion': False})
+        if user:
+            for child in user['children']:
+                if child['qr_token'] == token:
+                    person_id = child['id']
+                    person_type = 'child'
+                    person_name = child['name']
+                    user_id = user['id']
+                    break
 
-    return new_token
+    if not person_id:
+        raise HTTPException(status_code=404, detail="Cod QR invalid sau cont șters.")
+
+    # Activam pachetele in asteptare in caz ca ultimul abonament tocmai a expirat ieri
+    await check_and_activate_queued(person_id, person_type)
+
+    # 3. Gasim abonamentul ACTIV
+    active_sub = await db.subscriptions.find_one({
+        'person_id': person_id,
+        'person_type': person_type,
+        'status': 'active'
+    }, {'_id': 0})
+
+    if not active_sub:
+        raise HTTPException(status_code=400, detail=f"{person_name} nu are niciun abonament activ.")
+
+    # 4. Calculam sedintele
+    remaining = None
+    if active_sub.get('sessions_total'):
+        remaining = active_sub['sessions_total'] - active_sub.get('sessions_used', 0)
+
+    # Returnam exact datele necesare pentru frontend-ul antrenorului
+    return {
+        "user_id": user_id,
+        "person_id": person_id,
+        "person_type": person_type,
+        "person_name": person_name,
+        "plan_name": active_sub["plan_name"],
+        "sessions_remaining": remaining,
+        "sessions_total": active_sub.get("sessions_total"),
+        "expires_at": active_sub.get("expires_at"),
+        "location": active_sub.get("location", "Fiald")
+    }

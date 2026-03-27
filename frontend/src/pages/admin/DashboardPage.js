@@ -7,7 +7,7 @@ const StatCard = ({ icon: Icon, label, value, trend, color = 'primary' }) => (
   <div className="bg-[#0A0A0A] border border-white/5 p-6 hover:bg-white/[0.02] transition-colors group">
     <div className="flex items-start justify-between">
       <div className={`w-12 h-12 flex items-center justify-center transition-colors ${
-        color === 'primary' ? 'bg-[#CCFF00]/10 group-hover:bg-[#CCFF00] text-[#CCFF00] group-hover:text-black' : 
+        color === 'primary' ? 'bg-[#6db025]/10 group-hover:bg-[#6db025] text-[#6db025] group-hover:text-black' : 
         'bg-white/5 text-white/40'
       }`}>
         <Icon size={20} />
@@ -26,12 +26,12 @@ const StatCard = ({ icon: Icon, label, value, trend, color = 'primary' }) => (
 );
 
 const QuickAction = ({ icon: Icon, label, to }) => (
-  <Link to={to} className="flex items-center gap-4 p-4 bg-[#0A0A0A] border border-white/5 hover:border-[#CCFF00]/30 transition-all group">
-    <div className="w-10 h-10 bg-[#CCFF00]/10 flex items-center justify-center group-hover:bg-[#CCFF00]/20 transition-colors">
-      <Icon size={18} className="text-[#CCFF00]" />
+  <Link to={to} className="flex items-center gap-4 p-4 bg-[#0A0A0A] border border-white/5 hover:border-[#6db025]/30 transition-all group">
+    <div className="w-10 h-10 bg-[#6db025]/10 flex items-center justify-center group-hover:bg-[#6db025]/20 transition-colors">
+      <Icon size={18} className="text-[#6db025]" />
     </div>
     <span className="text-white font-bold uppercase text-xs tracking-widest flex-1">{label}</span>
-    <ChevronRight size={16} className="text-white/20 group-hover:text-[#CCFF00] group-hover:translate-x-1 transition-all" />
+    <ChevronRight size={16} className="text-white/20 group-hover:text-[#6db025] group-hover:translate-x-1 transition-all" />
   </Link>
 );
 
@@ -67,7 +67,7 @@ const DashboardPage = () => {
     }
   };
 
-  if (loading) return <div className="flex items-center justify-center py-20"><div className="animate-pulse text-[#CCFF00] font-heading tracking-widest uppercase">Preluare Date...</div></div>;
+  if (loading) return <div className="flex items-center justify-center py-20"><div className="animate-pulse text-[#6db025] font-heading tracking-widest uppercase">Preluare Date...</div></div>;
 
   return (
     <div className="space-y-8">
@@ -117,12 +117,12 @@ const DashboardPage = () => {
               <div className="divide-y divide-white/5">
                 {stats.recent_attendance.map((att, i) => (
                   <div key={i} className="p-4 flex items-center gap-4 hover:bg-white/[0.02] transition-colors">
-                    <div className="w-10 h-10 bg-[#CCFF00]/5 flex items-center justify-center">
-                      <CalendarCheck size={16} className="text-[#CCFF00]" />
+                    <div className="w-10 h-10 bg-[#6db025]/5 flex items-center justify-center">
+                      <CalendarCheck size={16} className="text-[#6db025]" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-white text-sm font-bold uppercase truncate">{att.person_name}</p>
-                      <p className="text-[#CCFF00]/60 text-[10px] uppercase font-black tracking-widest mt-0.5">{att.location}</p>
+                      <p className="text-[#6db025]/60 text-[10px] uppercase font-black tracking-widest mt-0.5">{att.location}</p>
                     </div>
                     <span className="text-white/20 text-[10px] font-bold uppercase tracking-wider bg-white/5 px-2 py-1">
                       {new Date(att.recorded_at).toLocaleDateString('ro-RO')}

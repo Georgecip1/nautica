@@ -56,16 +56,18 @@ export const authAPI = {
 
 // Users
 export const usersAPI = {
-  getAll: (params) => api.get('/users', { params }),
+  getAll: (params) => api.get('/users', { params }), // Acum suportă { page, limit, search, sort_by }
   getOne: (id) => api.get(`/users/${id}`),
   create: (data) => api.post('/users', data),
   update: (id, data) => api.put(`/users/${id}`, data),
   delete: (id) => api.delete(`/users/${id}`),
   resendSetup: (id) => api.post(`/users/${id}/resend-setup`),
+  getWithActiveSubscriptions: (params) => api.get('/users/active-subscriptions', { params }),
+  
+  // Modulul de Familie (Copii)
   addChild: (userId, data) => api.post(`/users/${userId}/children`, data),
   updateChild: (userId, childId, data) => api.put(`/users/${userId}/children/${childId}`, data),
   deleteChild: (userId, childId) => api.delete(`/users/${userId}/children/${childId}`),
-  getWithActiveSubscriptions: (params) => api.get('/users/active-subscriptions', { params }),
 };
 
 // Plans
@@ -82,15 +84,17 @@ export const subscriptionsAPI = {
   getAll: (params) => api.get('/subscriptions', { params }),
   getForPerson: (personId, personType) => api.get(`/subscriptions/person/${personId}`, { params: { person_type: personType } }),
   create: (data) => api.post('/subscriptions', data),
+  createBatch: (data) => api.post('/subscriptions/batch', data), // Endpoint nou pt checkout rapid la familii
   delete: (id) => api.delete(`/subscriptions/${id}`),
 };
 
 // Attendance
 export const attendanceAPI = {
   getAll: (params) => api.get('/attendance', { params }),
-  recordManual: (data) => api.post('/attendance/manual', data),
-  recordQR: (qrToken, location) => api.post('/attendance/qr', null, { params: { qr_token: qrToken, location } }),
-  delete: (id) => api.delete(`/attendance/${id}`),
+  // Noul backend accepta POST /attendance direct, cu person_id SAU qr_token in body
+  recordManual: (data) => api.post('/attendance', data),
+  recordQR: (qrToken, location) => api.post('/attendance', { qr_token: qrToken, location }),
+  delete: (id) => api.delete(`/attendance/${id}`), // Acest delete face si "Undo" la abonament acum!
   export: (params) => api.get('/export/attendance', { params }),
 };
 
@@ -136,26 +140,30 @@ export const reportsAPI = {
   getAttendance: (months) => api.get('/reports/attendance', { params: { months } }),
   getLocations: () => api.get('/reports/locations'),
   getHours: () => api.get('/reports/hours'),
+  // NOU: Export Excel (Necesita responseType: 'blob')
+  exportExcel: (params) => api.get('/reports/export/excel', { params, responseType: 'blob' }),
 };
 
-// Contact
+// Contact (Smart Inbox)
 export const contactAPI = {
   submit: (data) => api.post('/contact', data),
-  getMessages: () => api.get('/contact/messages'),
-  markRead: (id) => api.put(`/contact/messages/${id}/read`),
+  getMessages: () => api.get('/contact'),
+  markRead: (id) => api.put(`/contact/${id}/read`),
 };
 
+// Maintenance
 export const maintenanceAPI = {
   markInactiveUsers: () => api.post('/maintenance/mark-inactive-users'),
 };
 
-// QR
+// QR Code Scanner
 export const qrAPI = {
-  validate: (token) => api.get(`/qr/validate/${token}`),
+  // Sincronizat cu noul 'backend/routes/qr.py'
+  validate: (token) => api.get(`/qr/scan/${token}`),
   regenerate: (personId, personType) => api.post(`/qr/regenerate/${personId}`, null, { params: { person_type: personType } }),
 };
 
-// Seed
+// Seed DB
 export const seedAPI = {
   seed: () => api.post('/seed'),
 };

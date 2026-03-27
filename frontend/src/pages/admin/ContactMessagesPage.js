@@ -46,6 +46,14 @@ const ContactMessagesPage = () => {
 
   const unreadCount = messages.filter((m) => !m.is_read).length;
 
+  // Funcție antiglonț pentru a preveni crash-ul "Invalid time value" la mesajele vechi
+  const safeDateRender = (dateString) => {
+    if (!dateString) return "Dată necunoscută";
+    const d = new Date(dateString);
+    if (isNaN(d.getTime())) return "Dată invalidă";
+    return format(d, "dd MMM yyyy, HH:mm", { locale: ro });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
@@ -55,7 +63,7 @@ const ContactMessagesPage = () => {
         </div>
         <div className="bg-white/5 border border-white/10 px-4 py-3 flex items-center gap-3">
           <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Mesaje Noi:</span>
-          <span className="text-[#CCFF00] font-heading font-bold text-xl">{unreadCount}</span>
+          <span className="text-[#6db025] font-heading font-bold text-xl">{unreadCount}</span>
         </div>
       </div>
 
@@ -65,12 +73,12 @@ const ContactMessagesPage = () => {
           <input
             type="text" value={search} onChange={(e) => setSearch(e.target.value)}
             placeholder="Caută în mesaje..."
-            className="w-full bg-[#050505] border border-white/10 pl-12 pr-4 py-3 text-white focus:border-[#CCFF00] outline-none transition-all placeholder:text-white/10"
+            className="w-full bg-[#050505] border border-white/10 pl-12 pr-4 py-3 text-white focus:border-[#6db025] outline-none transition-all placeholder:text-white/10"
           />
         </div>
         <select
           value={filter} onChange={(e) => setFilter(e.target.value)}
-          className="bg-[#050505] border border-white/10 px-6 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-[#CCFF00]"
+          className="bg-[#050505] border border-white/10 px-6 py-3 text-white text-[10px] font-black uppercase tracking-widest outline-none focus:border-[#6db025]"
         >
           <option value="all">Istoric Complet</option>
           <option value="unread">Doar Necitite</option>
@@ -80,7 +88,7 @@ const ContactMessagesPage = () => {
 
       <div className="bg-[#0A0A0A] border border-white/5 overflow-hidden">
         {loading ? (
-           <div className="p-16 text-center text-[#CCFF00] animate-pulse font-heading text-xs tracking-widest uppercase">Sincronizare Inbox...</div>
+           <div className="p-16 text-center text-[#6db025] animate-pulse font-heading text-xs tracking-widest uppercase">Sincronizare Inbox...</div>
         ) : filteredMessages.length === 0 ? (
           <div className="p-20 text-center flex flex-col items-center justify-center gap-4 opacity-30">
              <Inbox size={40} className="text-white" />
@@ -89,24 +97,24 @@ const ContactMessagesPage = () => {
         ) : (
           <div className="divide-y divide-white/5">
             {filteredMessages.map((msg) => (
-              <div key={msg.id} className={`p-6 transition-colors ${!msg.is_read ? 'bg-white/[0.03] border-l-2 border-l-[#CCFF00]' : 'border-l-2 border-transparent hover:bg-white/[0.01]'}`}>
+              <div key={msg.id} className={`p-6 transition-colors ${!msg.is_read ? 'bg-white/[0.03] border-l-2 border-l-[#6db025]' : 'border-l-2 border-transparent hover:bg-white/[0.01]'}`}>
                 <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
                   <div className="flex-1">
                     <div className="flex items-center gap-3 flex-wrap mb-2">
                       <h3 className={`text-lg font-bold uppercase tracking-tight ${!msg.is_read ? 'text-white' : 'text-white/60'}`}>{msg.name}</h3>
-                      {!msg.is_read && <span className="text-[9px] uppercase px-2 py-0.5 bg-[#CCFF00]/20 text-[#CCFF00] font-black tracking-widest">Mesaj Nou</span>}
+                      {!msg.is_read && <span className="text-[9px] uppercase px-2 py-0.5 bg-[#6db025]/20 text-[#6db025] font-black tracking-widest">Mesaj Nou</span>}
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-x-6 gap-y-2 mb-4 text-[11px] font-bold uppercase tracking-widest text-white/30">
-                      <span className="flex items-center gap-2"><Mail size={14} className="text-[#CCFF00]/40" /> {msg.email}</span>
-                      {msg.phone && <span className="flex items-center gap-2"><Phone size={14} className="text-[#CCFF00]/40" /> {msg.phone}</span>}
+                      <span className="flex items-center gap-2"><Mail size={14} className="text-[#6db025]/40" /> {msg.email}</span>
+                      {msg.phone && <span className="flex items-center gap-2"><Phone size={14} className="text-[#6db025]/40" /> {msg.phone}</span>}
                     </div>
 
                     <div className="bg-[#050505] border border-white/5 p-5 text-white/70 text-sm leading-relaxed whitespace-pre-wrap font-medium">
                       {msg.message}
                     </div>
                     <div className="mt-3 text-[10px] text-white/20 uppercase font-black tracking-widest">
-                       Primit la: {format(new Date(msg.created_at), "dd MMM yyyy, HH:mm", { locale: ro })}
+                       Primit la: {safeDateRender(msg.created_at)}
                     </div>
                   </div>
                   

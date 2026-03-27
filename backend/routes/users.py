@@ -1,213 +1,208 @@
+import uuid
+from datetime import datetime, timezone
 from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel
 
-from fastapi import APIRouter, Depends, HTTPException
-
-from core.auth import build_password_link, get_current_user, issue_password_setup_token, require_admin, require_owner, send_transactional_email
 from core.db import db
-from models.user import Child, ChildCreate, User, UserCreate, UserResponse, UserUpdate
-from services.maintenance import mark_inactive_users_for_deletion
+from core.auth import require_admin, get_current_user
+
+# Fallback pentru functia de parola
+try:
+    from core.auth import hash_password
+except ImportError:
+    from core.auth import get_password_hash as hash_password
+
+from models.user import User
 
 router = APIRouter(tags=['users'])
 
+# --- Modele Pydantic ---
+class ChildCreate(BaseModel):
+    name: str
+    birth_date: Optional[str] = None
 
-@router.get('/users', response_model=List[UserResponse])
-async def get_users(role: Optional[str] = None, search: Optional[str] = None, admin: dict = Depends(require_admin)):
-    await mark_inactive_users_for_deletion()
-    query = {}
+class UserUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    role: Optional[str] = None
+    is_shared_family: Optional[bool] = None
+    secondary_parent_name: Optional[str] = None
+    secondary_parent_phone: Optional[str] = None
+
+class UserCreate(BaseModel):
+    name: str
+    email: Optional[str] = None
+    role: str = "USER"
+    is_shared_family: bool = False
+
+# ====================================================
+# RUTELE
+# ====================================================
+
+@router.get('/users')
+async def get_users(
+    page: int = 1, limit: int = 15, search: str = "", sort_by: str = "name_asc", role: str = None, filter_status: str = None,
+    admin: dict = Depends(require_admin)
+):
+    query = {"marked_for_deletion": False}
     if role:
-        query['role'] = role
+        query["role"] = role
     if search:
-        query['$or'] = [{'name': {'$regex': search, '$options': 'i'}}, {'email': {'$regex': search, '$options': 'i'}}]
-    users = await db.users.find(query, {'_id': 0}).to_list(1000)
-    return [UserResponse(**u) for u in users]
+        query["$or"] = [
+            {"name": {"$regex": search, "$options": "i"}},
+            {"email": {"$regex": search, "$options": "i"}},
+            {"phone": {"$regex": search, "$options": "i"}}
+        ]
+    
+    sort_config = [("name", 1)]
+    if sort_by == "name_desc":
+        sort_config = [("name", -1)]
+    elif sort_by == "newest":
+        sort_config = [("created_at", -1)]
+
+    # Fetch initial brut (va fi filtrat in memorie daca se cere 'filter_status')
+    cursor = db.users.find(query, {"_id": 0, "password_hash": 0}).sort(sort_config)
+    users = await cursor.to_list(None)
+
+    # AGREGAM STATUS COLOR (Verificam abonamentele familiei)
+    for user in users:
+        user["status_color"] = "none"
+        if user["role"] == "USER":
+            person_ids = [user["id"]] + [c["id"] for c in user.get("children", [])]
+            
+            alerts = await db.alerts.find({
+                "person_id": {"$in": person_ids},
+                "is_seen": False
+            }).to_list(None)
+            
+            if alerts:
+                if any(a["alert_type"] == "expired" for a in alerts):
+                    user["status_color"] = "red"
+                elif any(a["alert_type"] in ["expiring_soon", "low_entries"] for a in alerts):
+                    user["status_color"] = "yellow"
+
+    # Filtrare manuala in caz ca s-a selectat 'cu probleme' primul
+    if filter_status == "problems":
+        users = [u for u in users if u["status_color"] in ["red", "yellow"]] + [u for u in users if u["status_color"] == "none"]
+
+    total = len(users)
+    skip = (page - 1) * limit
+    paginated_users = users[skip : skip + limit]
+
+    return {"data": paginated_users, "total": total, "page": page, "total_pages": max(1, (total + limit - 1) // limit)}
 
 
 @router.get('/users/active-subscriptions')
-async def get_users_with_active_subscriptions(search: Optional[str] = None, admin: dict = Depends(require_admin)):
-    active_subs = await db.subscriptions.find({'status': 'active'}, {'_id': 0}).to_list(10000)
-    results = []
-    seen = set()
-
-    for sub in active_subs:
-        key = f"{sub['person_id']}_{sub['person_type']}"
-        if key in seen:
+async def get_active_users(search: str = "", admin: dict = Depends(require_admin)):
+    """Returneaza userii cu abonamente active pentru pagina de Prezenta Manuala."""
+    subs = await db.subscriptions.find({"status": "active"}).to_list(None)
+    active_list = []
+    for s in subs:
+        if search and search.lower() not in s["person_name"].lower():
             continue
-        seen.add(key)
-
-        user = await db.users.find_one({'id': sub['user_id']}, {'_id': 0})
-        if not user:
-            continue
-
-        if sub['person_type'] == 'user':
-            person_name = user['name']
-        else:
-            person_name = next((c['name'] for c in user.get('children', []) if c['id'] == sub['person_id']), 'Necunoscut')
-
-        if search and search.lower() not in person_name.lower():
-            continue
-
-        results.append({
-            'user_id': sub['user_id'],
-            'person_id': sub['person_id'],
-            'person_type': sub['person_type'],
-            'person_name': person_name,
-            'subscription': sub,
+        active_list.append({
+            "person_id": s["person_id"],
+            "person_type": s["person_type"],
+            "person_name": s["person_name"],
+            "subscription": s
         })
+    return active_list
 
-    return sorted(results, key=lambda x: x['person_name'])
 
-
-@router.get('/users/{user_id}', response_model=UserResponse)
-async def get_user(user_id: str, admin: dict = Depends(require_admin)):
-    user = await db.users.find_one({'id': user_id}, {'_id': 0})
+@router.get('/users/{user_id}')
+async def get_user(user_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] not in ["OWNER", "COACH"] and current_user["id"] != user_id:
+        raise HTTPException(403, "Access interzis")
+    user = await db.users.find_one({"id": user_id, "marked_for_deletion": False}, {"_id": 0, "password_hash": 0})
     if not user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-    return UserResponse(**user)
+        raise HTTPException(404, "Utilizator negăsit")
+    return user
 
 
-@router.post('/users', response_model=UserResponse)
+@router.post('/users')
 async def create_user(user_data: UserCreate, admin: dict = Depends(require_admin)):
-    if user_data.role in ['OWNER', 'COACH'] and admin['role'] != 'OWNER':
-        raise HTTPException(status_code=403, detail='Doar proprietarul poate crea conturi staff')
-
     if user_data.email:
-        existing = await db.users.find_one({'email': user_data.email})
+        existing = await db.users.find_one({"email": user_data.email})
         if existing:
-            raise HTTPException(status_code=400, detail='Email deja utilizat')
+            raise HTTPException(400, "Email-ul există deja în sistem")
+        
+    new_user_dict = {
+        "id": str(uuid.uuid4()),
+        "name": user_data.name,
+        "email": user_data.email,
+        "role": user_data.role,
+        "is_shared_family": user_data.is_shared_family,
+        "password_hash": hash_password("SeteazaParola123!"),
+        "qr_token": str(uuid.uuid4()),
+        "created_at": datetime.now(timezone.utc).isoformat(),
+        "last_activity": datetime.now(timezone.utc).isoformat(),
+        "marked_for_deletion": False,
+        "children": []
+    }
+    
+    await db.users.insert_one(new_user_dict)
+    
+    # QoL: Email opțional de bun venit
+    if user_data.email:
+        try:
+            from services.email import send_welcome_email
+            await send_welcome_email(new_user_dict["email"], new_user_dict["name"], "SeteazaParola123!")
+        except Exception:
+            pass # Ignoram erorile SMTP daca serverul de mail pica
+    
+    return {"message": "Utilizator creat", "id": new_user_dict["id"]}
 
-    user = User(**user_data.model_dump())
-    await db.users.insert_one(user.model_dump())
 
-    setup_link = None
-    email_sent = False
-    if user.email:
-        token, expires = await issue_password_setup_token(user.id, hours_valid=48)
-        user.password_setup_token = token
-        user.password_setup_expires = expires
-        setup_link = build_password_link(token)
-        email_sent = await send_transactional_email(
-            user.email,
-            'Setează parola pentru contul tău Nautica',
-            f"Bună, {user.name}!\n\nFolosește acest link pentru a-ți seta parola: {setup_link}\n\nLinkul expiră în 48 de ore.",
-            f'<p>Bună, <strong>{user.name}</strong>!</p><p>Folosește acest link pentru a-ți seta parola:</p><p><a href="{setup_link}">{setup_link}</a></p><p>Linkul expiră în 48 de ore.</p>',
-        )
-
-    response_payload = UserResponse(**user.model_dump()).model_dump()
-    if setup_link and not email_sent:
-        response_payload['setup_link'] = setup_link
-        response_payload['setup_token'] = user.password_setup_token
-    response_payload['email_sent'] = email_sent
-    return response_payload
-
-
-@router.put('/users/{user_id}', response_model=UserResponse)
-async def update_user(user_id: str, update: UserUpdate, admin: dict = Depends(require_admin)):
-    user = await db.users.find_one({'id': user_id}, {'_id': 0})
-    if not user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-
-    if user['role'] in ['OWNER', 'COACH'] and admin['role'] != 'OWNER':
-        raise HTTPException(status_code=403, detail='Doar proprietarul poate modifica conturi staff')
-
-    update_data = {k: v for k, v in update.model_dump().items() if v is not None}
-    if update_data.get('email'):
-        existing = await db.users.find_one({'email': update_data['email'], 'id': {'$ne': user_id}})
-        if existing:
-            raise HTTPException(status_code=400, detail='Email deja utilizat')
-
-    if update_data:
-        await db.users.update_one({'id': user_id}, {'$set': update_data})
-
-    updated = await db.users.find_one({'id': user_id}, {'_id': 0})
-    return UserResponse(**updated)
+@router.put('/users/{user_id}')
+async def update_user(user_id: str, data: UserUpdate, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] not in ["OWNER", "COACH"] and current_user["id"] != user_id:
+        raise HTTPException(403, "Access interzis")
+        
+    update_dict = {k: v for k, v in data.model_dump().items() if v is not None}
+    await db.users.update_one({"id": user_id}, {"$set": update_dict})
+    return {"message": "Actualizat cu succes"}
 
 
 @router.delete('/users/{user_id}')
-async def delete_user(user_id: str, admin: dict = Depends(require_owner)):
-    user = await db.users.find_one({'id': user_id}, {'_id': 0})
-    if not user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-
-    await db.users.delete_one({'id': user_id})
-    await db.subscriptions.delete_many({'user_id': user_id})
-    await db.attendance.delete_many({'user_id': user_id})
-    await db.alerts.delete_many({'user_id': user_id})
-    return {'message': 'Utilizator șters'}
+async def delete_user(user_id: str, admin: dict = Depends(require_admin)):
+    await db.users.update_one({"id": user_id}, {"$set": {"marked_for_deletion": True}})
+    return {"message": "Utilizator sters"}
 
 
 @router.post('/users/{user_id}/resend-setup')
-async def resend_setup_link(user_id: str, admin: dict = Depends(require_admin)):
-    user = await db.users.find_one({'id': user_id}, {'_id': 0})
-    if not user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-    if not user.get('email'):
-        raise HTTPException(status_code=400, detail='Utilizatorul nu are email')
-
-    token, _ = await issue_password_setup_token(user_id, hours_valid=48)
-    setup_link = build_password_link(token)
-    email_sent = await send_transactional_email(
-        user['email'],
-        'Link nou pentru setarea parolei Nautica',
-        f"Bună, {user['name']}!\n\nFolosește acest link pentru a-ți seta parola: {setup_link}\n\nLinkul expiră în 48 de ore.",
-        f'<p>Bună, <strong>{user["name"]}</strong>!</p><p>Folosește acest link pentru a-ți seta parola:</p><p><a href="{setup_link}">{setup_link}</a></p><p>Linkul expiră în 48 de ore.</p>',
-    )
-    response = {'message': 'Link trimis', 'email_sent': email_sent}
-    if not email_sent:
-        response['debug_token'] = token
-        response['setup_link'] = setup_link
-    return response
+async def resend_setup(user_id: str, admin: dict = Depends(require_admin)):
+    user = await db.users.find_one({"id": user_id})
+    if not user or not user.get("email"):
+        raise HTTPException(404, "Utilizator fără adresă de email")
+    from services.email import send_welcome_email
+    await send_welcome_email(user["email"], user["name"], "SeteazaParola123!")
+    return {"message": "Email retrimis"}
 
 
-@router.post('/users/{user_id}/children', response_model=UserResponse)
-async def add_child(user_id: str, child_data: ChildCreate, admin: dict = Depends(require_admin)):
-    user = await db.users.find_one({'id': user_id}, {'_id': 0})
-    if not user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-
-    child = Child(**child_data.model_dump())
-    children = user.get('children', [])
-    children.append(child.model_dump())
-
-    await db.users.update_one({'id': user_id}, {'$set': {'children': children}})
-    updated = await db.users.find_one({'id': user_id}, {'_id': 0})
-    return UserResponse(**updated)
-
-
-@router.put('/users/{user_id}/children/{child_id}')
-async def update_child(user_id: str, child_id: str, child_data: ChildCreate, user: dict = Depends(get_current_user)):
-    if user['id'] != user_id and user['role'] not in ['OWNER', 'COACH']:
-        raise HTTPException(status_code=403, detail='Acces interzis')
-
-    db_user = await db.users.find_one({'id': user_id}, {'_id': 0})
-    if not db_user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-
-    children = db_user.get('children', [])
-    for i, child in enumerate(children):
-        if child['id'] == child_id:
-            children[i]['name'] = child_data.name
-            if child_data.birth_date:
-                children[i]['birth_date'] = child_data.birth_date
-            break
-    else:
-        raise HTTPException(status_code=404, detail='Copil negăsit')
-
-    await db.users.update_one({'id': user_id}, {'$set': {'children': children}})
-    return {'message': 'Copil actualizat'}
+# ====================================================
+# RUTE COPII (Ierarhie de Familie - Faza 1)
+# ====================================================
+@router.post('/users/{user_id}/children')
+async def add_child(user_id: str, data: ChildCreate, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] not in ["OWNER", "COACH"] and current_user["id"] != user_id:
+        raise HTTPException(403, "Access interzis")
+        
+    import secrets
+    new_child = {
+        "id": str(uuid.uuid4()),
+        "name": data.name,
+        "birth_date": data.birth_date,
+        "qr_token": secrets.token_urlsafe(16)
+    }
+    await db.users.update_one({"id": user_id}, {"$push": {"children": new_child}})
+    return new_child
 
 
 @router.delete('/users/{user_id}/children/{child_id}')
-async def delete_child(user_id: str, child_id: str, admin: dict = Depends(require_admin)):
-    user = await db.users.find_one({'id': user_id}, {'_id': 0})
-    if not user:
-        raise HTTPException(status_code=404, detail='Utilizator negăsit')
-
-    children = [c for c in user.get('children', []) if c['id'] != child_id]
-    await db.users.update_one({'id': user_id}, {'$set': {'children': children}})
-    await db.subscriptions.delete_many({'person_id': child_id})
-    return {'message': 'Copil șters'}
-
-
-@router.post('/maintenance/mark-inactive-users')
-async def run_inactive_user_maintenance(admin: dict = Depends(require_owner)):
-    return await mark_inactive_users_for_deletion()
+async def delete_child(user_id: str, child_id: str, current_user: dict = Depends(get_current_user)):
+    if current_user["role"] not in ["OWNER", "COACH"] and current_user["id"] != user_id:
+        raise HTTPException(403, "Access interzis")
+    await db.users.update_one({"id": user_id}, {"$pull": {"children": {"id": child_id}}})
+    return {"message": "Copil sters"}

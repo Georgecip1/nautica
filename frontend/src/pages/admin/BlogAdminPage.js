@@ -125,7 +125,7 @@ const BlogAdminPage = () => {
 
       <div className="bg-[#0A0A0A] border border-white/5 overflow-hidden">
         {loading ? (
-          <div className="p-20 text-center text-[#CCFF00] animate-pulse font-heading text-xs tracking-widest uppercase">Se preia conținutul...</div>
+          <div className="p-20 text-center text-[#6db025] animate-pulse font-heading text-xs tracking-widest uppercase">Se preia conținutul...</div>
         ) : posts.length === 0 ? (
           <div className="p-20 text-center text-white/30 text-xs font-bold uppercase tracking-widest">Fără conținut publicat</div>
         ) : (
@@ -172,7 +172,7 @@ const BlogAdminPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-1.5">
                 <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">Titlul Articolului</label>
-                <input type="text" value={form.title} onChange={handleTitleChange} required className="w-full bg-[#0A0A0A] border border-white/10 focus:border-[#CCFF00] p-4 text-white outline-none" placeholder="Ex: Start cursuri 2026" />
+                <input type="text" value={form.title} onChange={handleTitleChange} required className="w-full bg-[#0A0A0A] border border-white/10 focus:border-[#6db025] p-4 text-white outline-none" placeholder="Ex: Start cursuri 2026" />
               </div>
               <div className="space-y-1.5">
                 <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">Link Direct (Slug)</label>
@@ -182,12 +182,12 @@ const BlogAdminPage = () => {
 
             <div className="space-y-1.5">
               <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">Rezumat (Apare în lista publică)</label>
-              <textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} required rows={2} className="w-full bg-[#0A0A0A] border border-white/10 focus:border-[#CCFF00] p-4 text-white resize-none outline-none" placeholder="Scurtă descriere..." />
+              <textarea value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} required rows={2} className="w-full bg-[#0A0A0A] border border-white/10 focus:border-[#6db025] p-4 text-white resize-none outline-none" placeholder="Scurtă descriere..." />
             </div>
 
             <div className="space-y-1.5">
               <label className="text-white/30 text-[10px] font-black uppercase tracking-widest">Corpul Textului</label>
-              <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} required rows={12} className="w-full bg-[#0A0A0A] border border-white/10 focus:border-[#CCFF00] p-4 text-white resize-none outline-none font-mono text-sm leading-relaxed" placeholder="Scrie aici conținutul..." />
+              <textarea value={form.content} onChange={(e) => setForm({ ...form, content: e.target.value })} required rows={12} className="w-full bg-[#0A0A0A] border border-white/10 focus:border-[#6db025] p-4 text-white resize-none outline-none font-mono text-sm leading-relaxed" placeholder="Scrie aici conținutul..." />
             </div>
 
             <div className="space-y-3 bg-white/[0.02] p-6 border border-white/5 rounded-sm">
@@ -206,7 +206,7 @@ const BlogAdminPage = () => {
                 <button 
                   type="button" 
                   onClick={() => fileInputRef.current?.click()} 
-                  className="bg-white/5 border border-white/10 hover:border-[#CCFF00]/50 hover:bg-[#CCFF00]/5 hover:text-[#CCFF00] text-white/60 px-6 py-4 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all rounded-sm"
+                  className="bg-white/5 border border-white/10 hover:border-[#6db025]/50 hover:bg-[#6db025]/5 hover:text-[#6db025] text-white/60 px-6 py-4 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all rounded-sm"
                 >
                   <Upload size={16} /> Încarcă din PC
                 </button>

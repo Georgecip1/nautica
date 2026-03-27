@@ -117,11 +117,11 @@ const AttendancePage = () => {
 
       <div className="bg-[#0A0A0A] border border-white/5 overflow-hidden">
         <div className="p-4 border-b border-white/5 bg-white/[0.02]">
-          <h2 className="text-[10px] font-black text-[#CCFF00] uppercase tracking-[0.2em]">Activitate Recentă</h2>
+          <h2 className="text-[10px] font-black text-[#6db025] uppercase tracking-[0.2em]">Activitate Recentă</h2>
         </div>
 
         {loading ? (
-          <div className="p-20 text-center text-[#CCFF00] animate-pulse uppercase font-heading text-xs tracking-widest">Sincronizare date...</div>
+          <div className="p-20 text-center text-[#6db025] animate-pulse uppercase font-heading text-xs tracking-widest">Sincronizare date...</div>
         ) : attendance.length === 0 ? (
           <div className="p-20 text-center flex flex-col items-center justify-center gap-4">
             <AlertCircle size={40} className="text-white/10" />
@@ -131,14 +131,14 @@ const AttendancePage = () => {
           <div className="divide-y divide-white/5">
             {attendance.map((att) => (
               <div key={att.id} className="flex items-center gap-4 p-4 hover:bg-white/[0.02] transition-colors group">
-                <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-[#CCFF00]/10 transition-colors">
-                  <User size={16} className="text-white/40 group-hover:text-[#CCFF00]" />
+                <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-[#6db025]/10 transition-colors">
+                  <User size={16} className="text-white/40 group-hover:text-[#6db025]" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-bold text-sm uppercase tracking-tight">{att.person_name}</p>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1">
                     <span className="text-white/40 text-[10px] uppercase font-medium flex items-center gap-1">
-                      <MapPin size={10} className="text-[#CCFF00]" /> {att.location}
+                      <MapPin size={10} className="text-[#6db025]" /> {att.location}
                     </span>
                     <span className="text-white/40 text-[10px] uppercase font-medium flex items-center gap-1">
                       <Calendar size={10} /> {format(new Date(att.recorded_at), 'dd MMM yyyy, HH:mm', { locale: ro })}
@@ -177,7 +177,7 @@ const AttendancePage = () => {
               <select 
                 value={selectedLocation} 
                 onChange={(e) => setSelectedLocation(e.target.value)} 
-                className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#CCFF00] outline-none transition-all appearance-none"
+                className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#6db025] outline-none transition-all appearance-none"
               >
                 {LOCATIONS.map(loc => <option key={loc.id} value={loc.name}>{loc.name}</option>)}
               </select>
@@ -192,7 +192,7 @@ const AttendancePage = () => {
                   placeholder="Caută în lista de abonamente active..." 
                   value={searchUsers} 
                   onChange={(e) => setSearchUsers(e.target.value)} 
-                  className="w-full bg-[#0A0A0A] border border-white/10 p-4 pl-12 text-white focus:border-[#CCFF00] outline-none placeholder:text-white/10" 
+                  className="w-full bg-[#0A0A0A] border border-white/10 p-4 pl-12 text-white focus:border-[#6db025] outline-none placeholder:text-white/10" 
                 />
               </div>
 
@@ -203,14 +203,14 @@ const AttendancePage = () => {
                     <div 
                       key={`${person.person_type}-${person.person_id}`} 
                       onClick={() => setSelectedPersons(prev => isSelected ? prev.filter(p => p.person_id !== person.person_id) : [...prev, person])}
-                      className={`p-4 flex items-center gap-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-all ${isSelected ? 'bg-[#CCFF00]/5' : ''}`}
+                      className={`p-4 flex items-center gap-4 border-b border-white/5 cursor-pointer hover:bg-white/5 transition-all ${isSelected ? 'bg-[#6db025]/5' : ''}`}
                     >
-                      <div className={`w-6 h-6 border flex items-center justify-center transition-all ${isSelected ? 'bg-[#CCFF00] border-[#CCFF00]' : 'border-white/10'}`}>
+                      <div className={`w-6 h-6 border flex items-center justify-center transition-all ${isSelected ? 'bg-[#6db025] border-[#6db025]' : 'border-white/10'}`}>
                         {isSelected && <Check size={14} className="text-black" />}
                       </div>
                       <div className="min-w-0">
                         <p className="text-white text-sm font-bold uppercase tracking-tight truncate">{person.person_name}</p>
-                        <p className="text-[#CCFF00] text-[9px] font-black uppercase tracking-tighter opacity-60 truncate">{person.subscription?.plan_name}</p>
+                        <p className="text-[#6db025] text-[9px] font-black uppercase tracking-tighter opacity-60 truncate">{person.subscription?.plan_name}</p>
                       </div>
                     </div>
                   );

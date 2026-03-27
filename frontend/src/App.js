@@ -140,3 +140,5 @@ function App() {
 }
 
 export default App;
+
+//uvicorn server:app --reload

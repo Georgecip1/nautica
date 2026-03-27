@@ -42,7 +42,7 @@ const ReportsPage = () => {
       return (
         <div className="bg-[#050505] border border-white/10 p-4 shadow-2xl">
           <p className="text-white text-xs font-bold uppercase tracking-widest mb-1">{label}</p>
-          <p className="text-[#CCFF00] font-black text-lg">
+          <p className="text-[#6db025] font-black text-lg">
             {payload[0].value} {payload[0].dataKey === 'revenue' ? 'LEI' : ''}
           </p>
         </div>
@@ -54,7 +54,7 @@ const ReportsPage = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="animate-pulse text-[#CCFF00] font-heading tracking-widest uppercase">Generare Rapoarte...</div>
+        <div className="animate-pulse text-[#6db025] font-heading tracking-widest uppercase">Generare Rapoarte...</div>
       </div>
     );
   }
@@ -70,17 +70,17 @@ const ReportsPage = () => {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#0A0A0A] border border-white/5 p-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-[#CCFF00]/10 flex items-center justify-center group-hover:bg-[#CCFF00] group-hover:text-black text-[#CCFF00] transition-colors">
+            <div className="w-10 h-10 bg-[#6db025]/10 flex items-center justify-center group-hover:bg-[#6db025] group-hover:text-black text-[#6db025] transition-colors">
               <TrendingUp size={20} />
             </div>
             <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Încasări</span>
           </div>
-          <p className="font-heading text-3xl font-bold text-white tracking-tight">{totalRevenue.toLocaleString()} <span className="text-[#CCFF00] text-lg">LEI</span></p>
+          <p className="font-heading text-3xl font-bold text-white tracking-tight">{totalRevenue.toLocaleString()} <span className="text-[#6db025] text-lg">LEI</span></p>
         </div>
         
         <div className="bg-[#0A0A0A] border border-white/5 p-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-[#CCFF00]/10 flex items-center justify-center group-hover:bg-[#CCFF00] group-hover:text-black text-[#CCFF00] transition-colors">
+            <div className="w-10 h-10 bg-[#6db025]/10 flex items-center justify-center group-hover:bg-[#6db025] group-hover:text-black text-[#6db025] transition-colors">
               <Calendar size={20} />
             </div>
             <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Intrări Total</span>
@@ -90,7 +90,7 @@ const ReportsPage = () => {
         
         <div className="bg-[#0A0A0A] border border-white/5 p-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-[#CCFF00]/10 flex items-center justify-center group-hover:bg-[#CCFF00] group-hover:text-black text-[#CCFF00] transition-colors">
+            <div className="w-10 h-10 bg-[#6db025]/10 flex items-center justify-center group-hover:bg-[#6db025] group-hover:text-black text-[#6db025] transition-colors">
               <MapPin size={20} />
             </div>
             <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Bazin Principal</span>
@@ -100,7 +100,7 @@ const ReportsPage = () => {
         
         <div className="bg-[#0A0A0A] border border-white/5 p-6 hover:bg-white/[0.02] transition-colors group">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-[#CCFF00]/10 flex items-center justify-center group-hover:bg-[#CCFF00] group-hover:text-black text-[#CCFF00] transition-colors">
+            <div className="w-10 h-10 bg-[#6db025]/10 flex items-center justify-center group-hover:bg-[#6db025] group-hover:text-black text-[#6db025] transition-colors">
               <Clock size={20} />
             </div>
             <span className="text-white/40 text-[10px] font-black uppercase tracking-widest">Oră Aglomerată</span>
@@ -123,7 +123,7 @@ const ReportsPage = () => {
                   <XAxis dataKey="month" stroke="#666" tick={{ fill: '#666', fontSize: 10, textTransform: 'uppercase' }} tickFormatter={(value) => value.split(' ')[0].substring(0, 3)} axisLine={false} tickLine={false} />
                   <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{fill: '#ffffff05'}} />
-                  <Bar dataKey="revenue" fill="#CCFF00" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                  <Bar dataKey="revenue" fill="#6db025" radius={[4, 4, 0, 0]} maxBarSize={40} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
@@ -142,7 +142,7 @@ const ReportsPage = () => {
                   <XAxis dataKey="month" stroke="#666" tick={{ fill: '#666', fontSize: 10, textTransform: 'uppercase' }} tickFormatter={(value) => value.split(' ')[0].substring(0, 3)} axisLine={false} tickLine={false} />
                   <YAxis stroke="#666" tick={{ fill: '#666', fontSize: 10 }} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Line type="monotone" dataKey="attendance" stroke="#CCFF00" strokeWidth={3} dot={{ fill: '#050505', stroke: '#CCFF00', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#CCFF00' }} />
+                  <Line type="monotone" dataKey="attendance" stroke="#6db025" strokeWidth={3} dot={{ fill: '#050505', stroke: '#6db025', strokeWidth: 2, r: 4 }} activeDot={{ r: 6, fill: '#6db025' }} />
                 </LineChart>
               </ResponsiveContainer>
             ) : (
@@ -160,14 +160,14 @@ const ReportsPage = () => {
             <div className="space-y-4">
               {locationsData.map((loc, i) => (
                 <div key={i} className="flex items-center gap-4 group">
-                  <span className="text-[#CCFF00] font-heading font-black opacity-40 group-hover:opacity-100 transition-opacity">{i + 1}</span>
+                  <span className="text-[#6db025] font-heading font-black opacity-40 group-hover:opacity-100 transition-opacity">{i + 1}</span>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-1.5">
                       <span className="text-white text-xs font-bold uppercase tracking-wide">{loc.location}</span>
                       <span className="text-white/60 text-xs font-medium">{loc.count} intrări</span>
                     </div>
                     <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#CCFF00]" style={{ width: `${(loc.count / (locationsData[0]?.count || 1)) * 100}%` }} />
+                      <div className="h-full bg-[#6db025]" style={{ width: `${(loc.count / (locationsData[0]?.count || 1)) * 100}%` }} />
                     </div>
                   </div>
                 </div>
@@ -186,7 +186,7 @@ const ReportsPage = () => {
                 <BarChart data={hoursData}>
                   <XAxis dataKey="hour" stroke="#666" tick={{ fill: '#666', fontSize: 10 }} tickFormatter={(value) => `${value}:00`} axisLine={false} tickLine={false} />
                   <Tooltip content={<CustomTooltip />} cursor={{fill: '#ffffff05'}} />
-                  <Bar dataKey="count" fill="#CCFF00" radius={[2, 2, 0, 0]} opacity={0.8} />
+                  <Bar dataKey="count" fill="#6db025" radius={[2, 2, 0, 0]} opacity={0.8} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

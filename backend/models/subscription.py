@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -11,6 +11,8 @@ class SubscriptionCreate(BaseModel):
     person_type: str
     plan_id: str
 
+class SubscriptionBatchCreate(BaseModel):
+    subscriptions: List[SubscriptionCreate]
 
 class Subscription(BaseModel):
     model_config = ConfigDict(extra='ignore')
@@ -21,14 +23,14 @@ class Subscription(BaseModel):
     person_type: str
     plan_id: str
     plan_name: str
-    location: str
+    location: str = "Fiald"  # Default
     sessions_total: Optional[int] = None
     sessions_used: int = 0
-    status: str = 'queued'
+    status: str = 'queued' # active, queued, expired, completed
     purchased_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     activated_at: Optional[str] = None
     expires_at: Optional[str] = None
-    price: float = 0
+    price: float = 0.0
 
 
 class SubscriptionResponse(BaseModel):

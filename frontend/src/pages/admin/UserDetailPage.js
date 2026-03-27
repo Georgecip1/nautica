@@ -138,7 +138,7 @@ const UserDetailPage = () => {
     } catch (error) { toast.error('Eroare la vânzare'); } finally { setSaving(false); }
   };
 
-  if (loading) return <div className="p-20 text-center animate-pulse text-[#CCFF00] font-heading">ÎNCĂRCARE...</div>;
+  if (loading) return <div className="p-20 text-center animate-pulse text-[#6db025] font-heading">ÎNCĂRCARE...</div>;
 
   // Verificăm dacă persoana curentă ar trebui să aibă UI de abonament
   const shouldShowSubUI = (person) => {
@@ -156,7 +156,7 @@ const UserDetailPage = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Link to="/admin/utilizatori" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-white/40 hover:text-[#CCFF00] transition-all">
+          <Link to="/admin/utilizatori" className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center text-white/40 hover:text-[#6db025] transition-all">
             <ArrowLeft size={20} />
           </Link>
           <div>
@@ -183,10 +183,10 @@ const UserDetailPage = () => {
 
       {/* Quick Actions */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        <button onClick={() => setShowAddChildModal(true)} className="flex items-center justify-center gap-2 p-4 bg-[#0A0A0A] border border-white/5 text-white/60 hover:text-[#CCFF00] transition-all text-xs font-bold uppercase tracking-widest"><Plus size={16} /> Adaugă Copil</button>
+        <button onClick={() => setShowAddChildModal(true)} className="flex items-center justify-center gap-2 p-4 bg-[#0A0A0A] border border-white/5 text-white/60 hover:text-[#6db025] transition-all text-xs font-bold uppercase tracking-widest"><Plus size={16} /> Adaugă Copil</button>
         {/* Butonul de vânzare apare doar dacă există cineva care poate primi abonament (copii sau adult client) */}
         {(user.role === 'USER' || user.children?.length > 0) && (
-          <button onClick={() => setShowAddSubscriptionModal(true)} className="flex items-center justify-center gap-2 p-4 bg-[#CCFF00]/10 border border-[#CCFF00]/20 text-[#CCFF00] hover:bg-[#CCFF00] hover:text-black transition-all text-xs font-bold uppercase tracking-widest"><CreditCard size={16} /> Vinde Abonament</button>
+          <button onClick={() => setShowAddSubscriptionModal(true)} className="flex items-center justify-center gap-2 p-4 bg-[#6db025]/10 border border-[#6db025]/20 text-[#6db025] hover:bg-[#6db025] hover:text-black transition-all text-xs font-bold uppercase tracking-widest"><CreditCard size={16} /> Vinde Abonament</button>
         )}
       </div>
 
@@ -216,9 +216,9 @@ const UserDetailPage = () => {
                 {needsSub ? (
                   <div className="flex-1 max-w-md">
                     {active ? (
-                      <div className="p-4 bg-[#CCFF00]/5 border border-[#CCFF00]/20">
+                      <div className="p-4 bg-[#6db025]/5 border border-[#6db025]/20">
                         <div className="flex justify-between mb-1">
-                          <span className="text-[#CCFF00] text-[10px] font-black uppercase flex items-center gap-1.5"><Check size={12} /> Abonament Activ</span>
+                          <span className="text-[#6db025] text-[10px] font-black uppercase flex items-center gap-1.5"><Check size={12} /> Abonament Activ</span>
                           <span className="text-white/20 text-[10px] uppercase font-bold">{active.location}</span>
                         </div>
                         <p className="text-white font-bold text-sm uppercase">{active.plan_name}</p>
@@ -256,7 +256,7 @@ const UserDetailPage = () => {
               <select 
                 value={`${newSubscription.person_type}-${newSubscription.person_id}`} 
                 onChange={(e) => { const [type, id] = e.target.value.split('-'); setNewSubscription({ ...newSubscription, person_type: type, person_id: id }); }}
-                className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white outline-none focus:border-[#CCFF00]"
+                className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white outline-none focus:border-[#6db025]"
               >
                 {/* Arătăm adultul doar dacă nu e staff */}
                 {user.role === 'USER' && <option value={`user-${user.id}`}>{user.name} (Adult)</option>}
@@ -269,7 +269,7 @@ const UserDetailPage = () => {
               <select 
                 value={newSubscription.plan_id} required
                 onChange={(e) => setNewSubscription({ ...newSubscription, plan_id: e.target.value })}
-                className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white outline-none focus:border-[#CCFF00]"
+                className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white outline-none focus:border-[#6db025]"
               >
                 <option value="">Alege oferta...</option>
                 {plans.map(p => <option key={p.id} value={p.id}>{p.activity} - {p.price} LEI</option>)}
@@ -277,10 +277,10 @@ const UserDetailPage = () => {
             </div>
 
             {newSubscription.plan_id && (
-               <div className="p-4 bg-[#CCFF00]/5 border border-[#CCFF00]/10 rounded-sm">
+               <div className="p-4 bg-[#6db025]/5 border border-[#6db025]/10 rounded-sm">
                   <div className="flex justify-between text-[10px] text-white/40 uppercase font-black"><span>Preț Standard:</span><span>{plans.find(p => p.id === newSubscription.plan_id)?.price} LEI</span></div>
-                  {subscriptionDiscount > 0 && <div className="flex justify-between text-[10px] text-[#CCFF00] uppercase font-black mt-1"><span>Discount Familie (10%):</span><span>-{plans.find(p => p.id === newSubscription.plan_id)?.price * 0.1} LEI</span></div>}
-                  <div className="flex justify-between pt-3 mt-3 border-t border-white/10 text-white font-black text-xl uppercase italic"><span>Total:</span><span className="text-[#CCFF00]">{selectedPlanPrice} LEI</span></div>
+                  {subscriptionDiscount > 0 && <div className="flex justify-between text-[10px] text-[#6db025] uppercase font-black mt-1"><span>Discount Familie (10%):</span><span>-{plans.find(p => p.id === newSubscription.plan_id)?.price * 0.1} LEI</span></div>}
+                  <div className="flex justify-between pt-3 mt-3 border-t border-white/10 text-white font-black text-xl uppercase italic"><span>Total:</span><span className="text-[#6db025]">{selectedPlanPrice} LEI</span></div>
                </div>
             )}
 
@@ -296,7 +296,7 @@ const UserDetailPage = () => {
           <form onSubmit={handleUpdateUser} className="space-y-4 mt-6">
             <div className="space-y-1">
               <label className="text-[10px] text-white/20 uppercase font-black pl-1">Nume Complet</label>
-              <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#CCFF00] outline-none" />
+              <input type="text" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#6db025] outline-none" />
             </div>
             <div className="space-y-1">
               <label className="text-[10px] text-white/20 uppercase font-black pl-1">Rol Sistem</label>
@@ -316,8 +316,8 @@ const UserDetailPage = () => {
         <DialogContent className="bg-[#121212] border-white/10 p-8 shadow-2xl">
           <DialogHeader><DialogTitle className="text-white uppercase font-heading text-xl">Adăugare Copil</DialogTitle></DialogHeader>
           <form onSubmit={handleAddChild} className="space-y-4 mt-6">
-            <input type="text" value={newChild.name} onChange={(e) => setNewChild({ ...newChild, name: e.target.value })} required className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#CCFF00] outline-none placeholder:text-white/10" placeholder="Numele copilului" />
-            <input type="date" value={newChild.birth_date} onChange={(e) => setNewChild({ ...newChild, birth_date: e.target.value })} className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#CCFF00] outline-none" />
+            <input type="text" value={newChild.name} onChange={(e) => setNewChild({ ...newChild, name: e.target.value })} required className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#6db025] outline-none placeholder:text-white/10" placeholder="Numele copilului" />
+            <input type="date" value={newChild.birth_date} onChange={(e) => setNewChild({ ...newChild, birth_date: e.target.value })} className="w-full bg-[#0A0A0A] border border-white/10 p-4 text-white focus:border-[#6db025] outline-none" />
             <button type="submit" disabled={saving} className="btn-primary w-full py-4 uppercase font-black tracking-widest mt-4">Confirmă</button>
           </form>
         </DialogContent>

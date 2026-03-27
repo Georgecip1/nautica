@@ -1,20 +1,21 @@
 from fastapi import APIRouter
 
-from core.auth import hash_password
 from core.db import db
 from models.plan import Plan
 from models.user import User
+
+try:
+    from core.auth import hash_password
+except ImportError:
+    from core.auth import get_password_hash as hash_password
 
 router = APIRouter(tags=['seed'])
 
 @router.post('/seed')
 async def seed_data():
-    # Ștergem datele vechi pentru a evita duplicatele la re-rulare
     await db.plans.delete_many({})
     await db.users.delete_many({})
 
-    # 1. PLANURILE (Abonamentele)
-    # Backend-ul are nevoie de ele pentru logica de calcul la check-in, valabilitate și plăți
     all_plans = [
         Plan(location='Bazin Fiald (Hotel Fiald)', activity='Ședință copii inițiere/perfecționare', category='KIDS', scope='child', sessions=1, duration_days=1, validity_days=30, price=80),
         Plan(location='Bazin Fiald (Hotel Fiald)', activity='Abonament copii 8 ședințe', category='KIDS', scope='child', sessions=8, duration_days=30, validity_days=30, price=440),
@@ -36,8 +37,6 @@ async def seed_data():
     for plan in all_plans:
         await db.plans.insert_one(plan.model_dump())
 
-    # 2. UTILIZATORII DE TEST
-    # Creăm cele 3 roluri principale pentru a te putea juca cu aplicația
     test_users = [
         User(
             name='Administrator', 

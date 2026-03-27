@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { attendanceAPI, qrAPI } from '../../lib/api';
 import { toast } from 'sonner';
 import { QrCode, Camera, Check, X, AlertTriangle, RefreshCw } from 'lucide-react';
@@ -159,7 +159,7 @@ const QRScanPage = () => {
         <button
           onClick={() => setCameraMode(false)}
           className={`px-6 py-3 flex items-center gap-2 font-heading uppercase text-sm tracking-widest transition-colors ${
-            !cameraMode ? 'bg-[#CCFF00] text-black font-bold' : 'bg-white/5 text-white/40 hover:bg-white/10'
+            !cameraMode ? 'bg-[#6db025] text-black font-bold' : 'bg-white/5 text-white/40 hover:bg-white/10'
           }`}
         >
           <QrCode size={16} /> Manual
@@ -167,7 +167,7 @@ const QRScanPage = () => {
         <button
           onClick={() => setCameraMode(true)}
           className={`px-6 py-3 flex items-center gap-2 font-heading uppercase text-sm tracking-widest transition-colors ${
-            cameraMode ? 'bg-[#CCFF00] text-black font-bold' : 'bg-white/5 text-white/40 hover:bg-white/10'
+            cameraMode ? 'bg-[#6db025] text-black font-bold' : 'bg-white/5 text-white/40 hover:bg-white/10'
           }`}
         >
           <Camera size={16} /> Cameră Telefon
@@ -182,7 +182,7 @@ const QRScanPage = () => {
             <select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
-              className="w-full bg-[#121212] border border-white/10 px-4 py-4 text-white focus:border-[#CCFF00] outline-none appearance-none"
+              className="w-full bg-[#121212] border border-white/10 px-4 py-4 text-white focus:border-[#6db025] outline-none appearance-none"
             >
               {LOCATIONS.map((loc) => (
                 <option key={loc.id} value={loc.name}>{loc.name}</option>
@@ -198,11 +198,11 @@ const QRScanPage = () => {
                 {/* Chenarul vizual pentru focus (HUD) */}
                 <div className="absolute inset-0 pointer-events-none z-10">
                   <div className="w-full h-full border-[40px] border-black/50" />
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-[#CCFF00] shadow-[0_0_15px_rgba(204,255,0,0.3)]">
-                     <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[#CCFF00] bg-[#121212] -translate-x-1/2 -translate-y-1/2" />
-                     <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[#CCFF00] bg-[#121212] translate-x-1/2 -translate-y-1/2" />
-                     <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[#CCFF00] bg-[#121212] -translate-x-1/2 translate-y-1/2" />
-                     <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[#CCFF00] bg-[#121212] translate-x-1/2 translate-y-1/2" />
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-[#6db025] shadow-[0_0_15px_rgba(109,176,37,0.3)]">
+                     <div className="absolute -top-1 -left-1 w-4 h-4 border-t-2 border-l-2 border-[#6db025] bg-[#121212] -translate-x-1/2 -translate-y-1/2" />
+                     <div className="absolute -top-1 -right-1 w-4 h-4 border-t-2 border-r-2 border-[#6db025] bg-[#121212] translate-x-1/2 -translate-y-1/2" />
+                     <div className="absolute -bottom-1 -left-1 w-4 h-4 border-b-2 border-l-2 border-[#6db025] bg-[#121212] -translate-x-1/2 translate-y-1/2" />
+                     <div className="absolute -bottom-1 -right-1 w-4 h-4 border-b-2 border-r-2 border-[#6db025] bg-[#121212] translate-x-1/2 translate-y-1/2" />
                   </div>
                 </div>
 
@@ -240,7 +240,7 @@ const QRScanPage = () => {
                   value={qrInput}
                   onChange={(e) => setQrInput(e.target.value)}
                   placeholder="Lipește textul codului aici..."
-                  className="w-full bg-[#121212] border border-white/10 focus:border-[#CCFF00] px-4 py-4 text-white placeholder:text-white/20 h-32 resize-none font-mono text-sm outline-none transition-all"
+                  className="w-full bg-[#121212] border border-white/10 focus:border-[#6db025] px-4 py-4 text-white placeholder:text-white/20 h-32 resize-none font-mono text-sm outline-none transition-all"
                 />
               </div>
 
@@ -279,7 +279,7 @@ const QRScanPage = () => {
                       lastResult.sessions_remaining <= 2 ? 'bg-yellow-500/5 border-yellow-500/20' : 'bg-white/[0.02] border-white/5'
                     }`}>
                       <p className={`font-heading text-5xl font-black mb-1 ${
-                        lastResult.sessions_remaining <= 2 ? 'text-yellow-400' : 'text-[#CCFF00]'
+                        lastResult.sessions_remaining <= 2 ? 'text-yellow-400' : 'text-[#6db025]'
                       }`}>
                         {lastResult.sessions_remaining}
                       </p>

@@ -1,148 +1,124 @@
+import io
+import pandas as pd
 from datetime import datetime, timedelta, timezone
 from typing import Optional
-
 from fastapi import APIRouter, Depends
-
-from core.auth import get_current_user, require_admin
+from fastapi.responses import StreamingResponse
+from core.auth import require_admin
 from core.db import db
-from services.alerts import generate_alerts
-from services.maintenance import mark_inactive_users_for_deletion
+from collections import defaultdict
 
 router = APIRouter(tags=['reports'])
 
-
-@router.get('/alerts')
-async def get_alerts(user_id: Optional[str] = None, unseen_only: bool = False, admin: dict = Depends(require_admin)):
-    await generate_alerts()
-    query = {}
-    if user_id:
-        query['user_id'] = user_id
-    if unseen_only:
-        query['is_seen'] = False
-    alerts = await db.alerts.find(query, {'_id': 0}).sort('created_at', -1).to_list(500)
-    return alerts
-
-
-@router.get('/alerts/count')
-async def get_alerts_count(admin: dict = Depends(require_admin)):
-    count = await db.alerts.count_documents({'is_seen': False})
-    return {'count': count}
-
-
-@router.put('/alerts/{alert_id}/seen')
-async def mark_alert_seen(alert_id: str, admin: dict = Depends(require_admin)):
-    await db.alerts.update_one({'id': alert_id}, {'$set': {'is_seen': True}})
-    return {'message': 'Alertă marcată ca văzută'}
-
-
-@router.put('/alerts/seen-all')
-async def mark_all_alerts_seen(admin: dict = Depends(require_admin)):
-    await db.alerts.update_many({'is_seen': False}, {'$set': {'is_seen': True}})
-    return {'message': 'Toate alertele marcate ca văzute'}
-
-
-@router.get('/my-alerts')
-async def get_my_alerts(user: dict = Depends(get_current_user)):
-    alerts = await db.alerts.find({'user_id': user['id']}, {'_id': 0}).sort('created_at', -1).to_list(100)
-    return alerts
-
-
 @router.get('/reports/dashboard')
 async def get_dashboard_stats(admin: dict = Depends(require_admin)):
-    await mark_inactive_users_for_deletion()
     now = datetime.now(timezone.utc)
-    month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    first_day_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
 
-    total_users = await db.users.count_documents({'role': 'USER'})
+    total_users = await db.users.count_documents({'role': 'USER', 'marked_for_deletion': False})
+    active_adults = await db.subscriptions.distinct("user_id", {"person_type": "user", "status": {"$in": ["active", "queued"]}})
+    active_children = await db.subscriptions.distinct("person_id", {"person_type": "child", "status": {"$in": ["active", "queued"]}})
     active_subs = await db.subscriptions.count_documents({'status': 'active'})
-    month_subs = await db.subscriptions.find({'purchased_at': {'$gte': month_start.isoformat()}}, {'_id': 0}).to_list(10000)
-    monthly_revenue = sum(s.get('price', 0) for s in month_subs)
-    monthly_attendance = await db.attendance.count_documents({'recorded_at': {'$gte': month_start.isoformat()}})
+
+    pipeline_revenue = [{"$match": {"purchased_at": {"$gte": first_day_of_month.isoformat()}}}, {"$group": {"_id": None, "total": {"$sum": "$price"}}}]
+    rev_result = await db.subscriptions.aggregate(pipeline_revenue).to_list(1)
+    monthly_revenue = rev_result[0]['total'] if rev_result else 0
+
+    monthly_attendance = await db.attendance.count_documents({'recorded_at': {'$gte': first_day_of_month.isoformat()}})
     unseen_alerts = await db.alerts.count_documents({'is_seen': False})
-    inactive_users_marked = await db.users.count_documents({'marked_for_deletion': True})
-    recent_attendance = await db.attendance.find({}, {'_id': 0}).sort('recorded_at', -1).to_list(5)
-    recent_subscriptions = await db.subscriptions.find({}, {'_id': 0}).sort('purchased_at', -1).to_list(5)
+
+    pipeline_top_plans = [{"$match": {"purchased_at": {"$gte": first_day_of_month.isoformat()}}}, {"$group": {"_id": "$plan_name", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}, {"$limit": 5}]
+    top_plans = await db.subscriptions.aggregate(pipeline_top_plans).to_list(None)
+    recent_att = await db.attendance.find({}, {'_id': 0, 'person_name': 1, 'location': 1, 'recorded_at': 1}).sort('original_scan_time', -1).limit(5).to_list(5)
 
     return {
-        'total_users': total_users,
-        'active_subscriptions': active_subs,
-        'monthly_revenue': monthly_revenue,
-        'monthly_attendance': monthly_attendance,
-        'unseen_alerts': unseen_alerts,
-        'inactive_users_marked': inactive_users_marked,
-        'recent_attendance': recent_attendance,
-        'recent_subscriptions': recent_subscriptions,
+        'total_users': total_users, 'active_adults': len(active_adults), 'active_children': len(active_children),
+        'active_subscriptions': active_subs, 'monthly_revenue': monthly_revenue, 'monthly_attendance': monthly_attendance,
+        'unseen_alerts': unseen_alerts, 'top_plans': top_plans, 'recent_attendance': recent_att
     }
 
+@router.get('/reports/export/excel')
+async def export_excel_report(start_date: Optional[str] = None, end_date: Optional[str] = None, admin: dict = Depends(require_admin)):
+    query_sub = {}
+    query_att = {}
+    if start_date or end_date:
+        date_q = {}
+        if start_date: date_q["$gte"] = start_date
+        if end_date: date_q["$lte"] = end_date
+        query_sub["purchased_at"] = date_q
+        query_att["recorded_at"] = date_q
+
+    subs = await db.subscriptions.find(query_sub, {'_id': 0}).to_list(None)
+    att = await db.attendance.find(query_att, {'_id': 0}).to_list(None)
+
+    sub_data = [{"Client": s.get("person_name", "N/A"), "Tip Client": "Adult" if s.get("person_type") == "user" else "Copil", "Abonament": s.get("plan_name", "N/A"), "Pret (LEI)": s.get("price", 0), "Status": s.get("status", "N/A").upper()} for s in subs]
+    att_data = [{"Client": a.get("person_name", "N/A"), "Abonament": a.get("plan_name", "N/A"), "Data": a.get("recorded_at", "")[:16].replace("T", " "), "Locatie": a.get("location", "Fiald")} for a in att]
+
+    df_subs = pd.DataFrame(sub_data) if sub_data else pd.DataFrame(columns=["Client", "Tip Client", "Abonament", "Pret (LEI)", "Status"])
+    df_att = pd.DataFrame(att_data) if att_data else pd.DataFrame(columns=["Client", "Abonament", "Data", "Locatie"])
+
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df_subs.to_excel(writer, sheet_name='Abonamente', index=False)
+        df_att.to_excel(writer, sheet_name='Prezente', index=False)
+        
+        # Auto adjust column width
+        for sheet_name in writer.sheets:
+            worksheet = writer.sheets[sheet_name]
+            for col_cells in worksheet.columns:
+                max_length = max((len(str(cell.value)) for cell in col_cells), default=10)
+                worksheet.column_dimensions[col_cells[0].column_letter].width = max_length + 2
+
+    output.seek(0)
+    
+    timestamp = datetime.now().strftime("%Y-%m-%d")
+    return StreamingResponse(output, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", headers={"Content-Disposition": f"attachment; filename=Raport_Nautica_{timestamp}.xlsx"})
 
 @router.get('/reports/revenue')
-async def get_revenue_report(months: int = 6, admin: dict = Depends(require_admin)):
+async def get_revenue_chart(months: int = 6, admin: dict = Depends(require_admin)):
     now = datetime.now(timezone.utc)
-    results = []
-    for i in range(months):
-        month_date = now - timedelta(days=30 * i)
-        month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        if month_date.month == 12:
-            month_end = month_start.replace(year=month_start.year + 1, month=1)
-        else:
-            month_end = month_start.replace(month=month_start.month + 1)
-
-        subs = await db.subscriptions.find({'purchased_at': {'$gte': month_start.isoformat(), '$lt': month_end.isoformat()}}, {'_id': 0}).to_list(10000)
-        revenue = sum(s.get('price', 0) for s in subs)
-        results.append({'month': month_start.strftime('%B %Y'), 'month_num': month_start.month, 'year': month_start.year, 'revenue': revenue, 'subscriptions_count': len(subs)})
-    return list(reversed(results))
-
+    start_date = (now - timedelta(days=30 * months)).isoformat()
+    subs = await db.subscriptions.find({"purchased_at": {"$gte": start_date}}, {"_id": 0, "purchased_at": 1, "price": 1}).to_list(None)
+    
+    revenue_by_month = defaultdict(float)
+    for s in subs:
+        if s.get("purchased_at"):
+            month_str = datetime.fromisoformat(s["purchased_at"].replace('Z', '+00:00')).strftime('%B %Y')
+            revenue_by_month[month_str] += s.get("price", 0)
+            
+    result = [{"month": k, "revenue": v} for k, v in revenue_by_month.items()]
+    return result[-months:]
 
 @router.get('/reports/attendance')
-async def get_attendance_report(months: int = 6, admin: dict = Depends(require_admin)):
+async def get_attendance_chart(months: int = 6, admin: dict = Depends(require_admin)):
     now = datetime.now(timezone.utc)
-    results = []
-    for i in range(months):
-        month_date = now - timedelta(days=30 * i)
-        month_start = month_date.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-        if month_date.month == 12:
-            month_end = month_start.replace(year=month_start.year + 1, month=1)
-        else:
-            month_end = month_start.replace(month=month_start.month + 1)
-
-        count = await db.attendance.count_documents({'recorded_at': {'$gte': month_start.isoformat(), '$lt': month_end.isoformat()}})
-        results.append({'month': month_start.strftime('%B %Y'), 'month_num': month_start.month, 'year': month_start.year, 'attendance': count})
-    return list(reversed(results))
-
+    start_date = (now - timedelta(days=30 * months)).isoformat()
+    att = await db.attendance.find({"recorded_at": {"$gte": start_date}}, {"_id": 0, "recorded_at": 1}).to_list(None)
+    
+    att_by_month = defaultdict(int)
+    for a in att:
+        if a.get("recorded_at"):
+            month_str = datetime.fromisoformat(a["recorded_at"].replace('Z', '+00:00')).strftime('%B %Y')
+            att_by_month[month_str] += 1
+            
+    result = [{"month": k, "attendance": v} for k, v in att_by_month.items()]
+    return result[-months:]
 
 @router.get('/reports/locations')
-async def get_locations_report(admin: dict = Depends(require_admin)):
-    attendance = await db.attendance.find({}, {'_id': 0}).to_list(100000)
-    location_counts = {}
-    for att in attendance:
-        loc = att.get('location', 'Necunoscut')
-        location_counts[loc] = location_counts.get(loc, 0) + 1
-    return [{'location': k, 'count': v} for k, v in sorted(location_counts.items(), key=lambda x: -x[1])]
-
+async def get_locations_chart(admin: dict = Depends(require_admin)):
+    pipeline = [{"$group": {"_id": "$location", "count": {"$sum": 1}}}, {"$sort": {"count": -1}}]
+    locs = await db.attendance.aggregate(pipeline).to_list(None)
+    return [{"location": l["_id"] or "Nespecificat", "count": l["count"]} for l in locs]
 
 @router.get('/reports/hours')
-async def get_hours_report(admin: dict = Depends(require_admin)):
-    attendance = await db.attendance.find({}, {'_id': 0}).to_list(100000)
-    hour_counts = {i: 0 for i in range(24)}
-    for att in attendance:
-        try:
-            dt = datetime.fromisoformat(att['recorded_at'])
-            hour_counts[dt.hour] += 1
-        except Exception:
-            pass
-    return [{'hour': k, 'count': v} for k, v in hour_counts.items()]
-
-
-@router.get('/export/attendance')
-async def export_attendance(date_from: Optional[str] = None, date_to: Optional[str] = None, admin: dict = Depends(require_admin)):
-    query = {}
-    if date_from:
-        query['recorded_at'] = {'$gte': date_from}
-    if date_to:
-        if 'recorded_at' in query:
-            query['recorded_at']['$lte'] = date_to
-        else:
-            query['recorded_at'] = {'$lte': date_to}
-
-    records = await db.attendance.find(query, {'_id': 0}).sort('recorded_at', -1).to_list(100000)
-    return records
+async def get_hours_chart(admin: dict = Depends(require_admin)):
+    att = await db.attendance.find({}, {"_id": 0, "recorded_at": 1}).to_list(None)
+    hours_count = defaultdict(int)
+    
+    for a in att:
+        if a.get("recorded_at"):
+            dt = datetime.fromisoformat(a["recorded_at"].replace('Z', '+00:00'))
+            hours_count[dt.hour] += 1
+            
+    result = [{"hour": h, "count": hours_count.get(h, 0)} for h in range(6, 23)] 
+    return result
